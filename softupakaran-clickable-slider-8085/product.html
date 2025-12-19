@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+  <script src="js/env.js"></script>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<meta content="SoftUpakaran – Demo store UI inspired by Kunyo style. Replace products/images later." name="description"/>
+<title>SoftUpakaran • Product</title>
+<link href="assets/logo.svg" rel="icon" type="image/svg+xml"/>
+<link href="styles.css" rel="stylesheet">
+</link></head>
+<body>
+<header class="topbar">
+<div class="container">
+<div class="nav">
+<a class="brand" href="index.html">
+<img alt="SoftUpakaran" src="assets/logo.svg"/>
+<span class="badge">Instant Delivery</span>
+</a>
+<div aria-label="Search" class="search" role="search">
+<span style="opacity:.65">🔎</span>
+<input data-search="" placeholder="Search products (demo)..."/>
+<span class="hint">Ctrl+K</span>
+</div>
+<div class="navlinks">
+<a class="btn" href="index.html"><span>Home</span> 🏠</a>
+<a class="btn" data-open-cart="" href="#"><span>Cart</span> 🛒 <span class="badge" data-cart-count="">0</span></a>
+<a class="btn" href="profile.html"><span>Profile</span> 👤</a>
+</div>
+<a id="adminLink" style="display:none" href="admin.html">Admin🔧</a></div>
+<div class="pillnav">
+<div class="pills" data-pills=""></div>
+</div>
+</div>
+</header>
+<main class="container">
+<section class="section" data-product=""></section>
+</main>
+<footer class="footer">
+<div class="container">
+<div class="footerGrid">
+<div>
+<img alt="SoftUpakaran" src="assets/logo.svg" style="height:32px">
+<p class="cardMeta" style="margin-top:10px;max-width:48ch">
+            Game top-ups, gift cards, subscriptions, coins, and gaming gears — demo UI inspired by Kunyo layout.
+            Replace text + products later.
+          </p>
+<p class="copy">New Baneshwor, Kathmandu (demo) • +977 01 1234567 • contact@softupakaran.example</p>
+</img></div>
+<div>
+<h4>Collections</h4>
+<a href="category.html?c=freefire">Free Fire Top Up</a>
+<a href="category.html?c=gift">Gift Cards</a>
+<a href="category.html?c=subs">Subscriptions</a>
+<a href="category.html?c=gears">Gaming Gears</a>
+</div>
+<div>
+<h4>Support</h4>
+<a href="#">Terms &amp; Conditions</a>
+<a href="#">Refund Policy</a>
+<a href="#">Contact</a>
+<a href="#">FAQ</a>
+</div>
+<div>
+<h4>Payments</h4>
+<a href="#">eSewa (placeholder)</a>
+<a href="#">Khalti (placeholder)</a>
+<a href="#">Bank Transfer</a>
+</div>
+</div>
+<div class="copy">© 2025 SoftUpakaran (demo). All rights reserved.</div>
+</div>
+</footer>
+<!-- Cart Modal -->
+<div aria-hidden="true" class="modalBackdrop" data-cart-modal="">
+<div aria-label="Cart" class="modal" role="dialog">
+<div class="modalHeader">
+<h3>Your Cart</h3>
+<button aria-label="Close" class="btn icon" data-cart-close="">✕</button>
+</div>
+<div class="modalBody" data-cart-body=""></div>
+<div class="cartFooter" data-cart-footer=""></div>
+</div>
+</div>
+<script>
+    // Ctrl+K focus search
+    document.addEventListener("keydown", (e) => {
+      if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        const i = document.querySelector("[data-search]");
+        if(i) i.focus();
+      }
+    });
+  </script>
+<script src="app.js"></script>
+<!-- Payment Modal -->
+<div aria-hidden="true" class="modalBackdrop" data-pay-modal="">
+<div aria-label="Payment options" class="modal" role="dialog">
+<div class="modalHeader">
+<h3>Checkout</h3>
+<button aria-label="Close" class="btn icon" data-pay-close="">✕</button>
+</div>
+<div class="modalBody" data-pay-body=""></div>
+<div class="cartFooter" data-pay-footer=""></div>
+</div>
+</div>
+<script src="app.js"></script>
+  <script src="js/auth-gate.js"></script>
+  <script src="js/fix-runtime.js"></script>
+  <script src="js/admin-visibility.js"></script>
+  <script src="js/dev-api-override.js"></script>
+<script src="js/auto-init.js"></script>
+</body>
+</html>

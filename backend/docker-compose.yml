@@ -1,0 +1,16 @@
+services:
+  api:
+    build: .
+    ports:
+      - "4000:4000"
+    environment:
+      PORT: 4000
+      DATABASE_FILE: /app/data/softupakaran.db
+      ADMIN_TOKEN: CHANGE_ME_ADMIN_TOKEN
+      JWT_SECRET: CHANGE_ME_STRONG_SECRET
+      JWT_EXPIRES_IN: 7d
+      ADMIN_EMAIL: admin@softupakaran.local
+      ADMIN_PASSWORD: admin12345
+    volumes:
+      - ./data:/app/data
+      - ./uploads:/app/uploads
