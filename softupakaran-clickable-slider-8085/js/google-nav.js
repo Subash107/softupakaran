@@ -62,6 +62,8 @@
         callback: async (response) => {
           var bases = getApiBases();
           var lastErr = null;
+          var lastMsg = null;
+          var sawNetwork = false;
           for (var i = 0; i < bases.length; i++) {
             var base = bases[i];
             try {
@@ -72,20 +74,30 @@
               });
               const data = await res.json().catch(() => ({}));
               if (!res.ok || !data.token) {
-                const msg = data && data.error ? String(data.error) : ("HTTP " + res.status);
+                var msg = data && data.error ? String(data.error) : ("HTTP " + res.status);
                 console.error("Google exchange failed:", data);
-                showError("Google sign-in failed: " + msg);
-                return;
+                if (res.status === 404 || res.status === 405) {
+                  lastMsg = "Google sign-in failed. Configure API base URL.";
+                } else {
+                  lastMsg = "Google sign-in failed: " + msg;
+                }
+                continue;
               }
               setToken(data.token);
               window.location.href = 'index.html';
               return;
             } catch (e) {
               lastErr = e;
+              sawNetwork = true;
             }
           }
           console.error('Google login failed', lastErr);
-          showError('Google sign-in failed. Check backend.');
+          if (!lastMsg) {
+            lastMsg = sawNetwork
+              ? 'Google sign-in failed. Backend unreachable.'
+              : 'Google sign-in failed. Check backend.';
+          }
+          showError(lastMsg);
         }
       });
       google.accounts.id.renderButton(holder, { theme: 'filled_black', type: 'icon', size: 'medium', shape: 'circle', logo_alignment: 'center' });
