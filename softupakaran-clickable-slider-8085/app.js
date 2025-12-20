@@ -33,7 +33,7 @@ let WHATSAPP_NUMBER = "9779800000000";
 // Replace this with your real QR image path (put your QR inside /assets)
 let ESEWA_QR_IMAGE = "assets/esewa-qr-placeholder.svg";
 
-const API_BASE = (localStorage.getItem("SPK_API_BASE") || "window.API_BASE").trim().replace(/\/$/, "");
+const API_BASE = (localStorage.getItem("SPK_API_BASE") || window.API_BASE).trim().replace(/\/$/, "");
 
 async function loadPublicSettings(){
   try{
@@ -654,3 +654,88 @@ document.addEventListener("DOMContentLoaded", init);
   updateText();
   setInterval(()=>go((i+1)%slides.length),4500);
 })();
+
+
+/* === Feedback Widget === */
+function mountFeedback(){
+  const btn = document.createElement("button");
+  btn.className = "feedbackButton";
+  btn.setAttribute("type","button");
+  btn.innerHTML = "✉️ Feedback";
+  document.body.appendChild(btn);
+
+  const overlay = document.createElement("div");
+  overlay.className = "feedbackOverlay";
+  overlay.innerHTML = `
+    <div class="feedbackCard">
+      <div class="feedbackHeader">
+        <div class="feedbackTitle">Share your feedback</div>
+        <button class="feedbackClose" aria-label="Close">×</button>
+      </div>
+      <div class="feedbackForm" role="form">
+        <label>Rating</label>
+        <div class="starRow" data-stars="">
+          ${[1,2,3,4,5].map(i => `<span class="star" data-val="${i}">⭐</span>`).join("")}
+        </div>
+        <label>Message</label>
+        <textarea rows="4" placeholder="What can we improve?" data-fb-msg=""></textarea>
+        <label>Contact (optional)</label>
+        <input placeholder="Email or WhatsApp" data-fb-contact=""/>
+        <div class="feedbackActions">
+          <button class="btn secondary" type="button" data-fb-cancel="">Cancel</button>
+          <button class="btn primary" type="button" data-fb-submit="">Send</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  let rating = 0;
+  function setRating(n){
+    rating = n;
+    overlay.querySelectorAll(".star").forEach(s => {
+      s.dataset.active = Number(Number(s.dataset.val) <= n);
+    });
+  }
+  overlay.querySelectorAll(".star").forEach(s => s.addEventListener("click", () => setRating(Number(s.dataset.val))));
+  const open = () => { overlay.dataset.open = "1"; setRating(0); };
+  const close = () => { overlay.dataset.open = "0"; };
+
+  btn.addEventListener("click", open);
+  overlay.querySelector(".feedbackClose").addEventListener("click", close);
+  overlay.querySelector("[data-fb-cancel]").addEventListener("click", close);
+  overlay.addEventListener("click", (e) => { if(e.target === overlay) close(); });
+
+  async function postJSON(url, data){
+    try{
+      const res = await fetch(url, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(data) });
+      return res.ok;
+    }catch(_){ return false; }
+  }
+
+  overlay.querySelector("[data-fb-submit]").addEventListener("click", async () => {
+    const msg = overlay.querySelector("[data-fb-msg]").value.trim();
+    const contact = overlay.querySelector("[data-fb-contact]").value.trim();
+    if(!msg && !rating){ alert("Please add a message or a rating."); return; }
+
+    const payload = { rating, message: msg, contact, page: location.pathname, ua: navigator.userAgent };
+    // Try optional API endpoint (if available), otherwise fallback to WhatsApp
+    let ok = false;
+    if(typeof API_BASE === "string" && API_BASE && API_BASE !== window.API_BASE){
+      ok = await postJSON(`${API_BASE}/api/public/feedback`, payload);
+    }
+    if(!ok && typeof WHATSAPP_NUMBER === "string" && WHATSAPP_NUMBER){
+      const text = `Feedback%0A${location.href}%0A⭐: ${rating}%0A${encodeURIComponent(msg)}%0AContact: ${encodeURIComponent(contact||"-")}`;
+      const url = `https://wa.me/${WHATSAPP_NUMBER.replace(/[^0-9]/g,"")}?text=${text}`;
+      window.open(url, "_blank");
+      ok = true; // treat as sent
+    }
+    try{ localStorage.setItem("SPK_LAST_FEEDBACK", JSON.stringify(payload)); }catch(_){}
+    alert(ok ? "Thanks! Your feedback has been sent." : "Saved locally. Could not send right now.");
+    close();
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  try{ mountFeedback(); }catch(e){ console.warn("Feedback widget failed:", e); }
+});
+/* === end Feedback Widget === */

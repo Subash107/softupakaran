@@ -1,4 +1,4 @@
-require("dotenv").config();
+﻿require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
@@ -6,6 +6,7 @@ const fs = require("fs");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const multer = require("multer");
+const crypto = require("crypto");
 
 const db = require("./db");
 const initDb = require("./init-db");
@@ -22,7 +23,11 @@ const TOKEN_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
 // Init DB schema + seed demo data
 initDb();
 
-app.use(cors());
+const corsOptions = {
+  origin: (origin, cb) => cb(null, true), // dev: allow all; harden in prod
+  credentials: true,
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // ---------- uploads (eSewa QR, etc.) ----------
@@ -167,9 +172,9 @@ async function ensureAdminUser() {
       ["Admin", email, hash]
     );
 
-    console.log("👤 Admin user ready:", email);
+    console.log("ðŸ‘¤ Admin user ready:", email);
   } catch (err) {
-    console.error("❌ Failed to ensure admin user:", err.message);
+    console.error("âŒ Failed to ensure admin user:", err.message);
   }
 }
 ensureAdminUser();
@@ -370,16 +375,45 @@ app.get("/api/public/feedback", async (req, res) => {
   }
 });
 
-app.get("/api/admin/feedback", adminRequired, async (_req, res) => {
+app.get("/api/admin/feedback", adminRequired, async (req, res) => {
   try {
+    const status = String(req.query.status || "all").trim().toLowerCase();
+    const q = String(req.query.q || "").trim();
+    const page = Math.max(parseInt(req.query.page || "1", 10) || 1, 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit || "20", 10) || 20, 1), 200);
+    const offset = (page - 1) * limit;
+
+    const where = [];
+    const params = [];
+
+    if (status && status !== "all") {
+      where.push("f.status = ?");
+      params.push(status === "approved" ? "published" : status);
+    }
+    if (q) {
+      where.push("(LOWER(f.name) LIKE ? OR LOWER(f.email) LIKE ? OR LOWER(f.message) LIKE ? OR LOWER(u.email) LIKE ?)");
+      const like = `%${q.toLowerCase()}%`;
+      params.push(like, like, like, like);
+    }
+
+    const whereSql = where.length ? ("WHERE " + where.join(" AND ")) : "";
+    const totalRow = await dbGet(
+      `SELECT COUNT(*) AS cnt FROM feedback f LEFT JOIN users u ON u.id = f.user_id ${whereSql}`,
+      params
+    );
+    const total = totalRow?.cnt ?? 0;
+
     const rows = await dbAll(
       `SELECT f.*, u.email AS user_email
        FROM feedback f
        LEFT JOIN users u ON u.id = f.user_id
+       ${whereSql}
        ORDER BY f.created_at DESC
-       LIMIT 300`
+       LIMIT ? OFFSET ?`,
+      params.concat([limit, offset])
     );
-    res.json(rows);
+
+    res.json({ feedback: rows, total });
   } catch (err) {
     res.status(500).json({ error: "Failed to load feedback" });
   }
@@ -691,6 +725,55 @@ app.get("/api/orders", adminRequired, (req, res) => {
   });
 });
 
+
+
+// ---------- Google sign-in (lightweight) ----------
+// Accepts Google credential JWT (from GIS). Verifies issuer and optional audience.
+app.post("/api/auth/google", async (req, res) => {
+  try {
+    const cred = (req.body && req.body.credential) || "";
+    if (!cred) return res.status(400).json({ error: "Missing credential" });
+    // decode without verifying signature (demo); basic checks:
+    const parts = String(cred).split(".");
+    if (parts.length < 2) return res.status(400).json({ error: "Invalid credential" });
+    function b64uToStr(s){ return Buffer.from(s.replace(/-/g,'+').replace(/_/g,'/'), 'base64').toString('utf8'); }
+    let payload;
+    try { payload = JSON.parse(b64uToStr(parts[1])); } catch (_) { return res.status(400).json({ error: "Bad payload" }); }
+    const iss = String(payload.iss || "");
+    if (!iss.includes("accounts.google.com")) return res.status(400).json({ error: "Invalid issuer" });
+    const allowAny = /^true$/i.test(String(process.env.ALLOW_ANY_GOOGLE_AUD || "")) || process.env.NODE_ENV !== "production";
+    const allowedAudiences = String(process.env.GOOGLE_CLIENT_IDS || process.env.GOOGLE_CLIENT_ID || "")
+      .split(/[,\s]+/)
+      .map((v) => v.trim())
+      .filter(Boolean);
+    const tokenAud = String(payload.aud || "");
+    if (allowedAudiences.length && !allowAny && !allowedAudiences.includes(tokenAud)) {
+      return res.status(400).json({ error: "Invalid audience", expected: allowedAudiences, got: tokenAud });
+    }
+
+    const email = String(payload.email || "").trim().toLowerCase();
+    const name = String(payload.name || "").trim() || "";
+    if (!email) return res.status(400).json({ error: "No email in credential" });
+
+    // find or create user
+    const existing = await dbGet("SELECT id, email, role, name FROM users WHERE email = ?", [email]).catch(() => null);
+    let userRow = existing;
+    if (!existing) {
+      const fallbackPassword = crypto.randomBytes(32).toString("hex");
+      const hash = await bcrypt.hash(fallbackPassword, 10);
+      const result = await dbRun(
+        "INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, 'user')",
+        [name, email, hash]
+      );
+      userRow = { id: result.lastID, email, role: "user", name };
+    }
+    return res.json({ token: signToken(userRow) });
+  } catch (err) {
+    console.error("Google auth failed:", err);
+    res.status(500).json({ error: "Google auth failed" });
+  }
+});
+
 app.listen(PORT, () => {
-  console.log(`🚀 SoftUpakaran API running on http://localhost:${PORT}`);
+  console.log("dYs? SoftUpakaran API running on http://localhost:" + PORT);
 });

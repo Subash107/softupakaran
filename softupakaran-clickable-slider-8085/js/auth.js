@@ -4,7 +4,7 @@
   // Can be overridden (shared with app.js/admin.js) by setting localStorage.SPK_API_BASE.
   function getApiBase(){
     const saved = localStorage.getItem("SPK_API_BASE");
-    return (saved && saved.trim()) ? saved.trim().replace(/\/$/, "") : "window.API_BASE";
+    return (saved && saved.trim()) ? saved.trim().replace(/\/$/, "") : window.API_BASE;
   }
 
   function parseJwt(token){
@@ -71,3 +71,46 @@
   // Expose minimal API
   window.Auth = { login, register, me, clearToken, parseJwt, getApiBase };
 })();
+
+
+// --- Google Sign-In (GIS) ---
+window.initGoogleLogin = function initGoogleLogin(){
+  try{
+    const clientId = window.GOOGLE_CLIENT_ID || (window.__GOOGLE_CLIENT_ID || "");
+    const target = document.getElementById('googleSignInBtn');
+    if(!target) return;
+    if(typeof google === 'undefined' || !clientId){
+      target.innerHTML = '<div class="muted">Google Sign-In not configured</div>';
+      return;
+    }
+    google.accounts.id.initialize({
+      client_id: clientId,
+      callback: async (resp) => {
+        try{
+          // send credential JWT to backend for exchange
+          const res = await fetch(getApiBase() + '/api/auth/google', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ credential: resp.credential })
+          });
+          if(!res.ok){
+            const t = await res.text();
+            throw new Error(t || 'Google login failed');
+          }
+          const data = await res.json();
+          if(!data.token) throw new Error('No token returned');
+          setToken(data.token);
+          document.dispatchEvent(new Event('auth:changed'));
+          const msg = document.getElementById('googleMsg');
+          if(msg) { msg.textContent = 'Signed in with Google ✅'; msg.className = 'msg ok'; }
+        }catch(e){
+          const msg = document.getElementById('googleMsg');
+          if(msg) { msg.textContent = 'Google sign-in failed: ' + (e.message || e); msg.className = 'msg bad'; }
+        }
+      }
+    });
+    google.accounts.id.renderButton(target, { theme: 'outline', size: 'large', shape: 'pill', text: 'continue_with' });
+  }catch(e){
+    console.error('initGoogleLogin error', e);
+  }
+};

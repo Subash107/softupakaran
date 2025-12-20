@@ -37,11 +37,6 @@
       <div>
         <h1 style="margin:0;font-size:30px;letter-spacing:.2px">Profile</h1>
               </div>
-      <div id="apiBaseCard" class="panelCard" style="padding:12px 14px;display:none;gap:10px;align-items:center">
-        <div class="muted" style="font-size:13px">API Base</div>
-        <input id="apiBase" class="inp" style="padding:10px 10px;min-width:280px" placeholder="http://localhost:4000" />
-        <button id="btnSaveApi" class="btn" type="button">Save</button>
-      </div>
     </div>
 
     <div class="profileGrid">
@@ -77,7 +72,6 @@
         </div>
 
         <div class="btnRow">
-          <button id="btnRefresh" class="btn" type="button">Refresh</button>
           <button id="btnLogout" class="btn" type="button">Logout</button>
                     <a class="btn" href="index.html" id="homeLink" style="text-decoration:none">Back to Home</a>
 <a class="btn" href="admin.html" id="adminLink" style="text-decoration:none">Admin</a>
@@ -87,19 +81,20 @@
       </section>
 
       <section id="authPanel" class="panelCard">
-        <h2 class="panelTitle">Sign in</h2>
-        <input id="loginEmail" class="inp" placeholder="Email" autocomplete="email" />
-        <div style="height:10px"></div>
-        <input id="loginPassword" class="inp" type="password" placeholder="Password" autocomplete="current-password" />
-        <div class="btnRow">
-          <button id="btnLogin" class="btn primary" type="button">Sign in</button>
+        <div id="signInSection" style="display:none">
+          <h2 class="panelTitle">Sign in</h2>
+          <input id="loginEmail" class="inp" placeholder="Email" autocomplete="email" />
+          <div style="height:10px"></div>
+          <input id="loginPassword" class="inp" type="password" placeholder="Password" autocomplete="current-password" />
+          <div class="btnRow">
+            <button id="btnLogin" class="btn primary" type="button">Sign in</button>
+          </div>
+          <div id="loginMsg" class="msg"></div>
+          <div style="height:10px"></div>
+          <div class="muted" style="font-size:13px;margin:6px 0 10px">Or continue with</div>
+          <div id="googleSignInBtn"></div>
+          <div id="googleMsg" class="msg"></div>
         </div>
-        <div id="loginMsg" class="msg"></div>
-        <div style="height:10px"></div>
-        <div class="muted" style="font-size:13px;margin:6px 0 10px">Or continue with</div>
-        <div id="googleSignInBtn"></div>
-        <div id="googleMsg" class="msg"></div>
-
 
         <div style="height:16px"></div>
         <hr style="border:none;border-top:1px solid rgba(255,255,255,.08);margin:0 0 16px" />
@@ -142,7 +137,6 @@
     const meBox = document.getElementById('meBox');
     const meMsg = document.getElementById('meMsg');
     const meDetails = document.getElementById('meDetails');
-    const apiBaseCard = document.getElementById('apiBaseCard');
     const authPanel = document.getElementById('authPanel');
     const feedbackPanel = document.getElementById('feedbackPanel');
     const fbMsg = document.getElementById('fbMsg');
@@ -160,7 +154,6 @@
         ['Name', me.name],
         ['Email', me.email],
         ['WhatsApp', me.whatsapp || me.phone || ''],
-        ['Role', me.role],
         ['Created', me.created_at || me.createdAt || ''],
         ['Updated', me.updated_at || me.updatedAt || '']
       ].filter(r => r[1] !== undefined && r[1] !== null && String(r[1]).trim() !== '');
@@ -170,12 +163,11 @@
            <div style="font-weight:700">${escapeHtml(v)}</div>
          </div>`
       ).join('');
-      meDetails.style.display = '';
+      meDetails.style.display = 'block';
     }
 
     function setAuthedUI(isAuthed, me){
       // Hide the marked blocks once user is signed in (registration returns token, so same logic).
-      if(apiBaseCard) apiBaseCard.style.display = isAuthed ? 'none' : '';
       if(authPanel) authPanel.style.display = isAuthed ? 'none' : '';
       // Hide raw JSON box (marked) after sign-in; allow debug=1 to see it.
       if(meBox) meBox.style.display = (isAuthed && isDebug) ? 'block' : 'none';
@@ -198,16 +190,6 @@
       el.className = 'msg ' + (ok === undefined ? 'muted' : (ok ? 'ok' : 'bad'));
     }
 
-    function loadApiBaseIntoInput(){
-      const saved = localStorage.getItem("SPK_API_BASE");
-      document.getElementById('apiBase').value = saved && saved.trim() ? saved.trim() : "http://localhost:4000";
-    }
-
-    document.getElementById('btnSaveApi').addEventListener('click', function(){
-      const v = document.getElementById('apiBase').value.trim().replace(/\/$/,'');
-      localStorage.setItem("SPK_API_BASE", v);
-      showMsg(meMsg, "Saved API base: " + v, true);
-    });
 
     async function loadMe(){
       try{
@@ -221,6 +203,7 @@
           return;
         }
         setStatus('Signed in as ' + (me.email || me.name || 'user'), true);
+        renderMeDetails(me);
         // Keep raw JSON for debug only
         meBox.textContent = JSON.stringify(me, null, 2);
         setAuthedUI(true, me);
@@ -329,12 +312,8 @@
       document.dispatchEvent(new Event('auth:changed'));
       await loadMe();
     });
+document.addEventListener('auth:changed', loadMe);
 
-    document.getElementById('btnRefresh').addEventListener('click', loadMe);
-
-    document.addEventListener('auth:changed', loadMe);
-
-    initApiBaseCard();
     initGoogleLogin();
     loadMe();
   </script>
@@ -342,5 +321,6 @@
   <script src="js/admin-visibility.js"></script>
   <script src="js/dev-api-override.js"></script>
 <script src="js/auto-init.js"></script>
+  <script src="js/google-nav.js"></script>
 </body>
 </html>

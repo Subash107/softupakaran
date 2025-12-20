@@ -1,11 +1,13 @@
 <!doctype html>
 <html lang="en">
 <head>
+  <meta name="google-client-id" content="161160759250-tvcu3a09i8gtdeaia6gpk04jo343oiet.apps.googleusercontent.com">
   <script src="js/env.js"></script>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Softupakaran Admin</title>
   <link rel="stylesheet" href="styles.css"/>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body class="page">
   <header class="topbar">
@@ -50,7 +52,7 @@
         </label>
 
         <div class="actions">
-          <button id="btnLogin" class="btn primary">Login</button>
+          <button id="btnLogin" class="btn primary">Login</button> <button id="btnApiTest" type="button" class="btn btn-secondary">Test API</button>
           <button id="btnClear" class="btn">Clear</button>
         </div>
       </div>
@@ -387,5 +389,30 @@
   <script src="js/admin-visibility.js"></script>
   <script src="js/dev-api-override.js"></script>
 <script src="js/auto-init.js"></script>
+  <script src="js/google-nav.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var apiInput = document.querySelector('#apiBase');
+  if (apiInput && (!apiInput.value || apiInput.value === 'window.API_BASE')) {
+    apiInput.value = window.API_BASE; // keep in sync with runtime
+  }
+  var testBtn = document.querySelector('#btnApiTest');
+  if (testBtn) {
+    testBtn.addEventListener('click', async function() {
+      const base = (document.querySelector('#apiBase')?.value || window.API_BASE).replace(/\/$/, '');
+      const url = base + '/healthz';
+      try {
+        const res = await fetch(url, { cache: 'no-store' });
+        const ok = res.ok ? 'OK' : ('HTTP ' + res.status);
+        alert('Ping ' + url + ' → ' + ok);
+      } catch (e) {
+        alert('Ping ' + url + ' failed: ' + e.message);
+      }
+    });
+  }
+});
+</script>
+
 </body>
 </html>

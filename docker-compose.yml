@@ -8,6 +8,8 @@ services:
     volumes:
       - ./backend/data:/app/data
       - ./backend/uploads:/app/uploads
+    environment:
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
 
   frontend:
     build: ./softupakaran-clickable-slider-8085
