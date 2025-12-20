@@ -1,6 +1,10 @@
 // why: render Google button, exchange credential with backend, store JWT
 (function(){
   function normalizeBase(url){ return String(url || "").trim().replace(/\/$/, ""); }
+  function isLocalHost(){
+    var host = window.location && window.location.hostname ? window.location.hostname : "";
+    return host === "localhost" || host === "127.0.0.1";
+  }
   function getApiBases(){
     var bases = [];
     try {
@@ -8,8 +12,7 @@
       if (saved) bases.push(saved);
     } catch(_) {}
     if (window.API_BASE) bases.push(window.API_BASE);
-    bases.push("http://localhost:4000");
-    if (window.location && window.location.origin) bases.push(window.location.origin);
+    if (isLocalHost()) bases.push("http://localhost:4000");
     var seen = {};
     return bases
       .map(normalizeBase)
@@ -25,6 +28,36 @@
   function setToken(t){ if(!t) return; localStorage.setItem('token', t); }
   function isLoggedIn(){ return !!(localStorage.getItem('token') || sessionStorage.getItem('token')); }
   function ready(fn){ if(document.readyState !== 'loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
+
+  function parseJwtPayload(token){
+    try {
+      var base = String(token || "").split('.')[1] || "";
+      base = base.replace(/-/g, '+').replace(/_/g, '/');
+      while (base.length % 4) base += '=';
+      var json = decodeURIComponent(atob(base).split('').map(function(c){
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+      return JSON.parse(json);
+    } catch(_) { return null; }
+  }
+
+  function setLocalSession(payload){
+    if(!payload || !payload.email) return false;
+    var now = new Date().toISOString();
+    var profile = {
+      name: payload.name || payload.given_name || "",
+      email: payload.email || "",
+      picture: payload.picture || "",
+      created_at: payload.iat ? new Date(payload.iat * 1000).toISOString() : now,
+      updated_at: now
+    };
+    try {
+      localStorage.setItem("SPK_LOCAL_PROFILE", JSON.stringify(profile));
+      localStorage.setItem("SPK_AUTH_SOURCE", "google-local");
+      localStorage.setItem("token", "local-google");
+      return true;
+    } catch(_) { return false; }
+  }
 
   function showError(msg){
     try { alert(msg); } catch(_) {}
@@ -56,11 +89,11 @@
         showError("Google Sign-in not configured. Set GOOGLE_CLIENT_ID.");
         return;
       }
+      var bases = getApiBases();
       google.accounts.id.initialize({
         client_id: cid,
         ux_mode: "popup",
         callback: async (response) => {
-          var bases = getApiBases();
           var lastErr = null;
           var lastMsg = null;
           var sawNetwork = false;
@@ -90,6 +123,13 @@
               lastErr = e;
               sawNetwork = true;
             }
+          }
+          var localOk = false;
+          var payload = response && response.credential ? parseJwtPayload(response.credential) : null;
+          if (payload) localOk = setLocalSession(payload);
+          if (localOk) {
+            window.location.href = 'index.html';
+            return;
           }
           console.error('Google login failed', lastErr);
           if (!lastMsg) {
