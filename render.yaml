@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: softupakaran-backend
+    env: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node src/server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: GOOGLE_CLIENT_ID
+        value: 161160759250-tvcu3a09i8gtdeaia6gpk04jo343oiet.apps.googleusercontent.com
+      - key: ALLOW_ANY_GOOGLE_AUD
+        value: "true"
