@@ -679,8 +679,6 @@ function mountFeedback(){
         </div>
         <label>Message</label>
         <textarea rows="4" placeholder="What can we improve?" data-fb-msg=""></textarea>
-        <label>Contact (optional)</label>
-        <input placeholder="Email or WhatsApp" data-fb-contact=""/>
         <div class="feedbackActions">
           <button class="btn secondary" type="button" data-fb-cancel="">Cancel</button>
           <button class="btn primary" type="button" data-fb-submit="">Send</button>
@@ -714,17 +712,16 @@ function mountFeedback(){
 
   overlay.querySelector("[data-fb-submit]").addEventListener("click", async () => {
     const msg = overlay.querySelector("[data-fb-msg]").value.trim();
-    const contact = overlay.querySelector("[data-fb-contact]").value.trim();
     if(!msg && !rating){ alert("Please add a message or a rating."); return; }
 
-    const payload = { rating, message: msg, contact, page: location.pathname, ua: navigator.userAgent };
+    const payload = { rating, message: msg, page: location.pathname, ua: navigator.userAgent };
     // Try optional API endpoint (if available), otherwise fallback to WhatsApp
     let ok = false;
     if(typeof API_BASE === "string" && API_BASE && API_BASE !== window.API_BASE){
       ok = await postJSON(`${API_BASE}/api/public/feedback`, payload);
     }
     if(!ok && typeof WHATSAPP_NUMBER === "string" && WHATSAPP_NUMBER){
-      const text = `Feedback%0A${location.href}%0A⭐: ${rating}%0A${encodeURIComponent(msg)}%0AContact: ${encodeURIComponent(contact||"-")}`;
+      const text = `Feedback%0A${location.href}%0A⭐: ${rating}%0A${encodeURIComponent(msg)}`;
       const url = `https://wa.me/${WHATSAPP_NUMBER.replace(/[^0-9]/g,"")}?text=${text}`;
       window.open(url, "_blank");
       ok = true; // treat as sent
