@@ -717,7 +717,7 @@ function mountFeedback(){
     const payload = { rating, message: msg, page: location.pathname, ua: navigator.userAgent };
     // Try optional API endpoint (if available), otherwise fallback to WhatsApp
     let ok = false;
-    if(typeof API_BASE === "string" && API_BASE && API_BASE !== window.API_BASE){
+    if(typeof API_BASE === "string" && API_BASE){
       ok = await postJSON(`${API_BASE}/api/public/feedback`, payload);
     }
     if(!ok && typeof WHATSAPP_NUMBER === "string" && WHATSAPP_NUMBER){
@@ -736,3 +736,4 @@ document.addEventListener("DOMContentLoaded", () => {
   try{ mountFeedback(); }catch(e){ console.warn("Feedback widget failed:", e); }
 });
 /* === end Feedback Widget === */
+
