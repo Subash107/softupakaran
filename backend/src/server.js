@@ -17,7 +17,8 @@ const PORT = process.env.PORT || 4000;
 
 // healthcheck
 app.get('/healthz', (req, res) => res.json({ status: 'ok' }));
-const JWT_SECRET = process.env.JWT_SECRET || "dev_secret_change_me";
+const FRONTEND_URL = process.env.FRONTEND_URL || "https://lamasubash107.gitlab.io/softupakaran/";
+app.get('/', (_req, res) => res.redirect(302, FRONTEND_URL));const JWT_SECRET = process.env.JWT_SECRET || "dev_secret_change_me";
 const TOKEN_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
 
 // Init DB schema + seed demo data
@@ -777,3 +778,4 @@ app.post("/api/auth/google", async (req, res) => {
 app.listen(PORT, () => {
   console.log("dYs? SoftUpakaran API running on http://localhost:" + PORT);
 });
+
