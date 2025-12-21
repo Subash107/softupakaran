@@ -459,11 +459,8 @@ app.delete("/api/admin/users/:id", adminRequired, async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isFinite(id)) return res.status(400).json({ error: "Invalid id" });
   try {
-    const user = await dbGet("SELECT id, role FROM users WHERE id = ?", [id]).catch(() => null);
+    const user = await dbGet("SELECT id FROM users WHERE id = ?", [id]).catch(() => null);
     if (!user) return res.status(404).json({ error: "Not found" });
-    if (String(user.role || "").toLowerCase() === "admin") {
-      return res.status(403).json({ error: "Cannot delete admin user" });
-    }
     const result = await dbRun("DELETE FROM users WHERE id = ?", [id]);
     if (!result.changes) return res.status(404).json({ error: "Not found" });
     res.json({ ok: true });

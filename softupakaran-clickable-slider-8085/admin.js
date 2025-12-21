@@ -132,12 +132,9 @@
       if (!r.ok) throw new Error("Users fetch failed: " + r.status);
       const data = await r.json();
       const rows = Array.isArray(data) ? data : (data.users || []);
-      const currentAdminId = getAdminUserId();
       const tbody = $("usersTable").querySelector("tbody");
       tbody.innerHTML = "";
       rows.forEach(u => {
-        const isAdmin = String(u.role || "").toLowerCase() === "admin";
-        const isSelf = currentAdminId && String(u.id) === String(currentAdminId);
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>${u.id ?? ""}</td>
@@ -147,9 +144,7 @@
           <td>${escapeHtml(u.role ?? "")}</td>
           <td>${formatDate(u.createdAt || u.created_at)}</td>
           <td>
-            ${isAdmin || isSelf ? `<span class="muted">-</span>` : `
-              <button class="btn sm danger" data-user-del="${escapeAttr(u.id)}" data-user-del-name="${escapeAttr(u.name || u.email || u.id)}">Delete</button>
-            `}
+            <button class="btn sm danger" data-user-del="${escapeAttr(u.id)}" data-user-del-name="${escapeAttr(u.name || u.email || u.id)}">Delete</button>
           </td>
         `;
         tbody.appendChild(tr);
