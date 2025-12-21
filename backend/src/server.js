@@ -455,6 +455,18 @@ app.get("/api/admin/users", adminRequired, async (_req, res) => {
   }
 });
 
+// Temporary debug endpoint for Render (admin-only).
+app.get("/api/admin/users/recent", adminRequired, async (_req, res) => {
+  try {
+    const rows = await dbAll(
+      "SELECT id, name, email, role, created_at FROM users ORDER BY created_at DESC LIMIT 50"
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to load users" });
+  }
+});
+
 app.delete("/api/admin/users/:id", adminRequired, async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isFinite(id)) return res.status(400).json({ error: "Invalid id" });
