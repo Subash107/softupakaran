@@ -165,12 +165,16 @@
     if ($("prodTable")) {
       try { await refreshProducts(); } catch (e) { /* ignore */ }
     }
+
+    // Admin 2FA status
+    try { await loadTotpStatus(); } catch (_) { /* ignore */ }
 }
 
   async function login() {
     setMsg($("loginMsg"), "");
     const email = $("email").value.trim();
     const password = $("password").value;
+    const otp = $("otp")?.value?.trim() || "";
     const apiBase = $("apiBase").value.trim() || window.API_BASE;
     setApiBase(apiBase);
 
@@ -179,10 +183,12 @@
       return;
     }
 
+    const payload = { email, password };
+    if (otp) payload.otp = otp;
     const res = await fetch(getApiBase() + "/api/auth/login", {
       method: "POST",
       headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify(payload)
     });
 
     if (!res.ok) {
@@ -198,13 +204,19 @@
     }
 
     setToken(data.token);
+    if ($("otp")) $("otp").value = "";
     showLoggedIn(true);
     await refreshDashboard();
+    if (data.needs_2fa_setup) {
+      setMsg($("loginMsg"), "Login success. Please set up 2FA.", "info");
+      showTotpSetup(true);
+    }
   }
 
   async function logout() {
     setToken("");
     showLoggedIn(false);
+    resetTotpSetup();
     setMsg($("loginMsg"), "Logged out.", "info");
   }
 
@@ -291,6 +303,83 @@
       setMsg($("createUserMsg"), String(e.message || e), "error");
     } finally {
       btn.disabled = false;
+    }
+  }
+
+  function showTotpSetup(show) {
+    const card = $("totpCard");
+    if (!card) return;
+    card.style.display = show ? "" : "none";
+  }
+
+  function resetTotpSetup() {
+    if ($("totpQr")) $("totpQr").style.display = "none";
+    if ($("totpQr")) $("totpQr").removeAttribute("src");
+    if ($("totpSecret")) $("totpSecret").value = "";
+    if ($("totpCode")) $("totpCode").value = "";
+    if ($("totpHint")) $("totpHint").textContent = "Click \"Start setup\" to generate a QR.";
+    setMsg($("totpMsg"), "");
+  }
+
+  async function loadTotpStatus() {
+    const statusEl = $("totpStatus");
+    if (!statusEl) return;
+    try {
+      const r = await api("/api/admin/2fa/status");
+      if (!r.ok) throw new Error("Status failed: " + r.status);
+      const data = await r.json();
+      statusEl.textContent = data.enabled ? "Status: enabled" : "Status: not enabled";
+      showTotpSetup(true);
+      if (!data.pending) resetTotpSetup();
+    } catch (e) {
+      statusEl.textContent = "Status: unknown";
+    }
+  }
+
+  async function startTotpSetup() {
+    setMsg($("totpMsg"), "");
+    try {
+      const r = await api("/api/admin/2fa/setup/start", { method: "POST" });
+      if (!r.ok) {
+        const txt = await safeText(r);
+        setMsg($("totpMsg"), "Setup failed: " + txt, "error");
+        return;
+      }
+      const data = await r.json();
+      if ($("totpQr")) {
+        $("totpQr").src = data.qr_data_url;
+        $("totpQr").style.display = "block";
+      }
+      if ($("totpSecret")) $("totpSecret").value = data.secret || "";
+      if ($("totpHint")) $("totpHint").textContent = "Scan the QR in your authenticator app.";
+      setMsg($("totpMsg"), "QR generated. Scan and verify.", "info");
+    } catch (e) {
+      setMsg($("totpMsg"), String(e.message || e), "error");
+    }
+  }
+
+  async function verifyTotpSetup() {
+    setMsg($("totpMsg"), "");
+    const code = $("totpCode")?.value?.trim() || "";
+    if (!code) {
+      setMsg($("totpMsg"), "Enter the 6-digit code first.", "warn");
+      return;
+    }
+    try {
+      const r = await api("/api/admin/2fa/setup/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: code })
+      });
+      if (!r.ok) {
+        const txt = await safeText(r);
+        setMsg($("totpMsg"), "Verify failed: " + txt, "error");
+        return;
+      }
+      setMsg($("totpMsg"), "2FA enabled.", "success");
+      await loadTotpStatus();
+    } catch (e) {
+      setMsg($("totpMsg"), String(e.message || e), "error");
     }
   }
 
@@ -861,6 +950,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     $("btnClear").addEventListener("click", () => {
       $("email").value = "";
       $("password").value = "";
+      if ($("otp")) $("otp").value = "";
       setMsg($("loginMsg"), "");
     });
 
@@ -868,6 +958,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     $("btnRefresh").addEventListener("click", refreshDashboard);
     $("btnSaveWhatsapp").addEventListener("click", saveWhatsapp);
     $("btnUploadQr").addEventListener("click", uploadQr);
+    $("btnTotpStart")?.addEventListener("click", startTotpSetup);
+    $("btnTotpVerify")?.addEventListener("click", verifyTotpSetup);
     $("btnCreateUser")?.addEventListener("click", createUser);
     $("usersTable")?.addEventListener("click", (e) => {
       const btn = e.target?.closest?.("button[data-user-del]");

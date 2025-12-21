@@ -7,6 +7,8 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const multer = require("multer");
 const crypto = require("crypto");
+const speakeasy = require("speakeasy");
+const qrcode = require("qrcode");
 
 const db = require("./db");
 const initDb = require("./init-db");
@@ -90,6 +92,19 @@ async function setSetting(key, value) {
     "INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
     [key, value]
   );
+}
+
+async function getAdminTotpSecret() {
+  return await getSetting("admin_totp_secret");
+}
+async function getAdminTotpPending() {
+  return await getSetting("admin_totp_pending");
+}
+async function setAdminTotpSecret(secret) {
+  await setSetting("admin_totp_secret", secret || "");
+}
+async function setAdminTotpPending(secret) {
+  await setSetting("admin_totp_pending", secret || "");
 }
 
 function signToken(user) {
@@ -239,7 +254,7 @@ app.post("/api/admin/users", adminRequired, async (req, res) => {
 });
 
 app.post("/api/auth/login", async (req, res) => {
-  const { email, password } = req.body || {};
+  const { email, password, otp } = req.body || {};
   if (!email || !password) return res.status(400).json({ error: "Email and password are required" });
 
   try {
@@ -253,7 +268,24 @@ app.post("/api/auth/login", async (req, res) => {
     const ok = await bcrypt.compare(password, user.password_hash);
     if (!ok) return res.status(401).json({ error: "Invalid credentials" });
 
-    res.json({ token: signToken(user) });
+    if (String(user.role || "").toLowerCase() === "admin") {
+      const secret = await getAdminTotpSecret();
+      if (secret) {
+        const token = String(otp || "").trim();
+        if (!token) return res.status(401).json({ error: "2FA required" });
+        const valid = speakeasy.totp.verify({
+          secret,
+          encoding: "base32",
+          token,
+          window: 1,
+        });
+        if (!valid) return res.status(401).json({ error: "Invalid 2FA code" });
+        return res.json({ token: signToken(user), totp_enabled: true });
+      }
+      return res.json({ token: signToken(user), totp_enabled: false, needs_2fa_setup: true });
+    }
+
+    res.json({ token: signToken(user), totp_enabled: false });
   } catch (err) {
     console.error("Login failed:", err.message);
     res.status(500).json({ error: "Login failed" });
@@ -455,15 +487,57 @@ app.get("/api/admin/users", adminRequired, async (_req, res) => {
   }
 });
 
-// Temporary debug endpoint for Render (admin-only).
-app.get("/api/admin/users/recent", adminRequired, async (_req, res) => {
+// ---------- admin 2FA (TOTP) ----------
+app.get("/api/admin/2fa/status", adminRequired, async (_req, res) => {
   try {
-    const rows = await dbAll(
-      "SELECT id, name, email, role, created_at FROM users ORDER BY created_at DESC LIMIT 50"
-    );
-    res.json(rows);
+    const secret = await getAdminTotpSecret();
+    const pending = await getAdminTotpPending();
+    res.json({ enabled: !!secret, pending: !!pending });
   } catch (err) {
-    res.status(500).json({ error: "Failed to load users" });
+    res.status(500).json({ error: "Failed to load 2FA status" });
+  }
+});
+
+app.post("/api/admin/2fa/setup/start", adminRequired, async (req, res) => {
+  try {
+    const secret = await getAdminTotpSecret();
+    if (secret) return res.status(409).json({ error: "2FA already enabled" });
+
+    const email = String(req.user?.email || "admin");
+    const name = `Softupakaran Admin (${email})`;
+    const generated = speakeasy.generateSecret({ name, issuer: "Softupakaran" });
+    const pendingSecret = generated.base32;
+    await setAdminTotpPending(pendingSecret);
+
+    const qrDataUrl = await qrcode.toDataURL(generated.otpauth_url);
+    res.json({
+      otpauth_url: generated.otpauth_url,
+      secret: pendingSecret,
+      qr_data_url: qrDataUrl,
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to start 2FA setup" });
+  }
+});
+
+app.post("/api/admin/2fa/setup/verify", adminRequired, async (req, res) => {
+  const token = String(req.body?.token || "").trim();
+  if (!token) return res.status(400).json({ error: "Missing token" });
+  try {
+    const pending = await getAdminTotpPending();
+    if (!pending) return res.status(400).json({ error: "No pending setup" });
+    const valid = speakeasy.totp.verify({
+      secret: pending,
+      encoding: "base32",
+      token,
+      window: 1,
+    });
+    if (!valid) return res.status(400).json({ error: "Invalid code" });
+    await setAdminTotpSecret(pending);
+    await setAdminTotpPending("");
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to verify 2FA setup" });
   }
 });
 
