@@ -1,5 +1,14 @@
 ﻿stages:
+  - build
   - deploy
+
+sanity:
+  stage: build
+  image: alpine:3.19
+  script:
+    - echo "CI running"
+  rules:
+    - when: always
 
 pages:
   stage: deploy
