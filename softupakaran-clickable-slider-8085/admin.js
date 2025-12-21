@@ -1,4 +1,4 @@
-﻿(() => {
+(() => {
   const $ = (id) => document.getElementById(id);
 
   function setMsg(el, text, type = "info") {
@@ -202,7 +202,7 @@
       setMsg($("whatsappMsg"), "Save failed: " + txt, "error");
       return;
     }
-    setMsg($("whatsappMsg"), "Saved WhatsApp number âœ…", "success");
+    setMsg($("whatsappMsg"), "Saved WhatsApp number ✅", "success");
     await refreshDashboard();
   }
 
@@ -221,7 +221,7 @@
       setMsg($("qrMsg"), "Upload failed: " + txt, "error");
       return;
     }
-    setMsg($("qrMsg"), "QR uploaded âœ…", "success");
+    setMsg($("qrMsg"), "QR uploaded ✅", "success");
     $("qrFile").value = "";
     await refreshDashboard();
   }
@@ -257,7 +257,7 @@
         setMsg($("createUserMsg"), "Create failed: " + txt, "error");
         return;
       }
-      setMsg($("createUserMsg"), "User created âœ…", "success");
+      setMsg($("createUserMsg"), "User created ✅", "success");
       // clear form
       ["newUserName","newUserEmail","newUserPassword","newUserPhone","newUserWhatsapp"].forEach(id => {
         if ($(id)) $(id).value = "";
@@ -307,7 +307,7 @@ function downloadCsv(filename, csvText){
 }
 
 async function exportUsersCsv(){
-  setMsg($("usersMsg"), "Preparing CSVâ€¦", "info");
+  setMsg($("usersMsg"), "Preparing CSV…", "info");
   try{
     const r = await api("/api/admin/users");
     if(!r.ok) throw new Error("Users fetch failed: " + r.status);
@@ -331,7 +331,7 @@ async function exportUsersCsv(){
 }
 
 async function exportFeedbackCsv(){
-  setMsg($("fbMsg"), "Preparing CSVâ€¦", "info");
+  setMsg($("fbMsg"), "Preparing CSV…", "info");
   try{
     const { status, q } = getFbFilters();
     let page = 1;
@@ -412,9 +412,11 @@ function formatDate(v) {
 
   function renderStars(n) {
     const r = parseInt(n, 10);
-    if (!r || r < 1) return "â€”";
+    if (!r || r < 1) return "";
     const clamped = Math.max(1, Math.min(5, r));
-    return "â˜…".repeat(clamped) + "â˜†".repeat(5 - clamped);
+    const filled = "?".repeat(clamped);
+    const empty = "?".repeat(5 - clamped);
+    return `<span class="stars" aria-label="${clamped} out of 5">${filled}${empty}</span>`;
   }
 
   function getFbFilters() {
@@ -462,7 +464,7 @@ function formatDate(v) {
       const tr = document.createElement("tr");
       const name = (f.name || "").trim();
       const email = (f.email || f.user_email || "").trim();
-      const user = [name || "â€”", email ? `(${email})` : ""].join(" ").trim();
+      const user = [name || "—", email ? `(${email})` : ""].join(" ").trim();
 
       const statusLabel = uiStatusFromDb(f.status);
       const badgeCls = badgeClassFromDb(f.status);
@@ -470,7 +472,7 @@ function formatDate(v) {
       tr.innerHTML = `
         <td>${f.id ?? ""}</td>
         <td>${escapeHtml(user)}</td>
-        <td>${escapeHtml(renderStars(f.rating))}</td>
+        <td>${renderStars(f.rating)}</td>
         <td style="max-width:520px;white-space:normal">${escapeHtml(f.message ?? "")}</td>
         <td><span class="badge ${badgeCls}">${escapeHtml(statusLabel)}</span></td>
         <td>${formatDate(f.createdAt || f.created_at)}</td>
@@ -586,7 +588,7 @@ function formatDate(v) {
     const from = (prodTotal === 0) ? 0 : (prodOffset + 1);
     const to = Math.min(prodOffset + prodLimit, prodTotal);
 
-    if (info) info.textContent = `Page ${page} / ${pages} â€¢ Showing ${from}-${to}`;
+    if (info) info.textContent = `Page ${page} / ${pages} • Showing ${from}-${to}`;
     if (totalInfo) totalInfo.textContent = `Total: ${prodTotal}`;
     if (prev) prev.disabled = prodOffset <= 0;
     if (next) next.disabled = (prodOffset + prodLimit) >= prodTotal;
@@ -758,7 +760,7 @@ function formatDate(v) {
           setMsg($("prodMsg"), "Create failed: " + txt, "error");
           return;
         }
-        setMsg($("prodMsg"), "Product created âœ…", "success");
+        setMsg($("prodMsg"), "Product created ✅", "success");
       } else {
         const id = prodEditingId || payload.id;
         delete payload.id; // do not change id on edit
@@ -772,7 +774,7 @@ function formatDate(v) {
           setMsg($("prodMsg"), "Update failed: " + txt, "error");
           return;
         }
-        setMsg($("prodMsg"), "Product updated âœ…", "success");
+        setMsg($("prodMsg"), "Product updated ✅", "success");
       }
 
       clearProdEditor();
@@ -794,7 +796,7 @@ function formatDate(v) {
         setMsg($("prodMsg"), "Delete failed: " + txt, "error");
         return;
       }
-      setMsg($("prodMsg"), "Deleted âœ…", "success");
+      setMsg($("prodMsg"), "Deleted ✅", "success");
 
       // if we deleted the last item on a page, go back one page
       if (prodOffset > 0 && ($("prodTable")?.querySelector("tbody")?.children?.length || 1) === 1) {
@@ -935,3 +937,4 @@ $("btnFbExport")?.addEventListener("click", exportFeedbackCsv);
     }
   });
 })();
+
