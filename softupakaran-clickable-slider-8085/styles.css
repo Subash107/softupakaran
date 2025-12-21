@@ -1269,6 +1269,12 @@ html, body {
 
 /* === Fix: responsive hero text for small screens === */
 @media (max-width: 680px){
+  .heroSlider{
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    border-radius: 0;
+  }
   .heroOverlay{ align-items:flex-end; } /* why: keep CTAs visible above fold */
   .heroText{ padding: 18px; max-width: 90%; }
   .heroText h1{
@@ -1278,5 +1284,5 @@ html, body {
     margin-bottom: 8px;
   }
   .heroText p{ font-size: 14px; }
-  .heroSlider img{ object-fit: cover; height: 260px; }
+  .heroSlider img{ object-fit: contain; height: auto; }
 }
