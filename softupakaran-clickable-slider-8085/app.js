@@ -46,6 +46,15 @@ async function loadPublicSettings(){
     }
     // If QR already rendered, update it
     document.querySelectorAll(".qrWrap img").forEach(img => { img.src = ESEWA_QR_IMAGE; });
+    const spotifyCategory = { id:"spotify", name:"Spotify", tag:"Premium plans & top-ups", icon:"SP" };
+    if (!categories.some(c => String(c.id) === "spotify")) {
+      categories = categories.concat([spotifyCategory]);
+    }
+
+    const spotifySample = { id:"p9", name:"Spotify Premium (1 Month)", category:"spotify", price:499, img:"assets/product-3.svg", note:"Instant activation" };
+    if (!products.some(p => String(p.category) === "spotify")) {
+      products = products.concat([spotifySample]);
+    }
   }catch(e){
     // silent
   }
@@ -101,6 +110,15 @@ async function loadTestimonials(){
         </div>
       `;
     }).join("");
+    const spotifyCategory = { id:"spotify", name:"Spotify", tag:"Premium plans & top-ups", icon:"SP" };
+    if (!categories.some(c => String(c.id) === "spotify")) {
+      categories = categories.concat([spotifyCategory]);
+    }
+
+    const spotifySample = { id:"p9", name:"Spotify Premium (1 Month)", category:"spotify", price:499, img:"assets/product-3.svg", note:"Instant activation" };
+    if (!products.some(p => String(p.category) === "spotify")) {
+      products = products.concat([spotifySample]);
+    }
   }catch(e){
     // silent
   }
@@ -585,6 +603,15 @@ async function loadCatalogFromApi(){
         }));
       }
     }
+    const spotifyCategory = { id:"spotify", name:"Spotify", tag:"Premium plans & top-ups", icon:"SP" };
+    if (!categories.some(c => String(c.id) === "spotify")) {
+      categories = categories.concat([spotifyCategory]);
+    }
+
+    const spotifySample = { id:"p9", name:"Spotify Premium (1 Month)", category:"spotify", price:499, img:"assets/product-3.svg", note:"Instant activation" };
+    if (!products.some(p => String(p.category) === "spotify")) {
+      products = products.concat([spotifySample]);
+    }
   }catch(e){
     // fallback to static arrays
   }
@@ -738,5 +765,6 @@ document.addEventListener("DOMContentLoaded", () => {
   try{ mountFeedback(); }catch(e){ console.warn("Feedback widget failed:", e); }
 });
 /* === end Feedback Widget === */
+
 
 
