@@ -1,4 +1,4 @@
-/* === Banner Config (edit later easily) === */
+﻿/* === Banner Config (edit later easily) === */
 const BANNERS = [
   {
     title: "Top up Steam Wallet instantly",
@@ -113,6 +113,7 @@ let categories = [
   { id:"pubg", name:"PUBG UC", tag:"UC pins & UID top-up", icon:"🎮" },
   { id:"gift", name:"Gift Cards", tag:"Steam, Google Play & more", icon:"🎁" },
   { id:"subs", name:"Subscriptions", tag:"Netflix, Spotify, Prime", icon:"⭐" },
+  { id:"spotify", name:"Spotify", tag:"Premium plans & top-ups", icon:"SP" },
   { id:"social", name:"Social Media Boost", tag:"Coins, credits & boosts", icon:"📣" },
   { id:"gears", name:"Gaming Gears", tag:"Mice, headsets, keyboards", icon:"🖱️" },
 ];
@@ -122,6 +123,7 @@ let products = [
   { id:"p2", name:"Free Fire Diamonds (Direct UID)", category:"freefire", price:80, img:"assets/product-2.svg", note:"Fast top-up • Secure" },
   { id:"p3", name:"Steam Wallet Code $10", category:"gift", price:1500, img:"assets/product-3.svg", note:"Digital code • US/Global" },
   { id:"p4", name:"Netflix Subscription (1 Month)", category:"subs", price:999, img:"assets/product-4.svg", note:"Easy activation" },
+  { id:"p9", name:"Spotify Premium (1 Month)", category:"spotify", price:499, img:"assets/product-3.svg", note:"Instant activation" },
   { id:"p5", name:"Google Play Gift Card $5", category:"gift", price:750, img:"assets/product-5.svg", note:"US region" },
   { id:"p6", name:"MLBB Diamonds (1000+)", category:"pubg", price:800, img:"assets/product-6.svg", note:"UID + Zone" },
   { id:"p7", name:"TikTok Coins Pack", category:"social", price:350, img:"assets/product-7.svg", note:"Quick processing" },
@@ -736,4 +738,5 @@ document.addEventListener("DOMContentLoaded", () => {
   try{ mountFeedback(); }catch(e){ console.warn("Feedback widget failed:", e); }
 });
 /* === end Feedback Widget === */
+
 
