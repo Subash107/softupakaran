@@ -2,9 +2,24 @@
 (function(){
   // Default: talk to backend running via Docker compose on localhost:4000.
   // Can be overridden (shared with app.js/admin.js) by setting localStorage.SPK_API_BASE.
+  function normalizeBase(v){
+    return (v && v.trim()) ? v.trim().replace(/\/$/, "") : "";
+  }
+
+  function isLocalHost(host){
+    return host === "localhost" || host === "127.0.0.1";
+  }
+
+  function isLocalApi(base){
+    return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(base || "");
+  }
+
   function getApiBase(){
-    const saved = localStorage.getItem("SPK_API_BASE");
-    return (saved && saved.trim()) ? saved.trim().replace(/\/$/, "") : window.API_BASE;
+    const saved = normalizeBase(localStorage.getItem("SPK_API_BASE"));
+    const meta = normalizeBase(window.API_BASE);
+    const host = window.location && window.location.hostname ? window.location.hostname : "";
+    if (!isLocalHost(host) && saved && isLocalApi(saved) && meta) return meta;
+    return saved || meta;
   }
 
   function parseJwt(token){

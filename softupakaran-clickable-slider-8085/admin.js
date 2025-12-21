@@ -7,9 +7,24 @@
     el.textContent = text || "";
   }
 
+  function normalizeBase(v) {
+    return (v && v.trim()) ? v.trim().replace(/\/$/, "") : "";
+  }
+
+  function isLocalHost(host) {
+    return host === "localhost" || host === "127.0.0.1";
+  }
+
+  function isLocalApi(base) {
+    return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(base || "");
+  }
+
   function getApiBase() {
-    const saved = localStorage.getItem("SPK_API_BASE");
-    return (saved && saved.trim()) ? saved.trim().replace(/\/$/, "") : window.API_BASE;
+    const saved = normalizeBase(localStorage.getItem("SPK_API_BASE"));
+    const meta = normalizeBase(window.API_BASE);
+    const host = window.location && window.location.hostname ? window.location.hostname : "";
+    if (!isLocalHost(host) && saved && isLocalApi(saved) && meta) return meta;
+    return saved || meta;
   }
 
   function setApiBase(v) {
@@ -53,6 +68,11 @@
       const cur = localStorage.getItem("token") || "";
       if (adminToken && cur === adminToken) localStorage.removeItem("token");
     }
+  }
+
+  function getAdminUserId() {
+    const payload = parseJwtPayload(getToken());
+    return payload ? payload.userId : null;
   }
 
   async function api(path, opts = {}) {
@@ -112,9 +132,12 @@
       if (!r.ok) throw new Error("Users fetch failed: " + r.status);
       const data = await r.json();
       const rows = Array.isArray(data) ? data : (data.users || []);
+      const currentAdminId = getAdminUserId();
       const tbody = $("usersTable").querySelector("tbody");
       tbody.innerHTML = "";
       rows.forEach(u => {
+        const isAdmin = String(u.role || "").toLowerCase() === "admin";
+        const isSelf = currentAdminId && String(u.id) === String(currentAdminId);
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>${u.id ?? ""}</td>
@@ -123,6 +146,11 @@
           <td>${escapeHtml(u.whatsapp ?? u.whatsapp_number ?? "")}</td>
           <td>${escapeHtml(u.role ?? "")}</td>
           <td>${formatDate(u.createdAt || u.created_at)}</td>
+          <td>
+            ${isAdmin || isSelf ? `<span class="muted">-</span>` : `
+              <button class="btn sm danger" data-user-del="${escapeAttr(u.id)}" data-user-del-name="${escapeAttr(u.name || u.email || u.id)}">Delete</button>
+            `}
+          </td>
         `;
         tbody.appendChild(tr);
       });
@@ -268,6 +296,23 @@
       setMsg($("createUserMsg"), String(e.message || e), "error");
     } finally {
       btn.disabled = false;
+    }
+  }
+
+  async function deleteUser(id, name) {
+    if (!id) return;
+    if (!confirm("Delete user " + (name ? (name + " (" + id + ")") : id) + " ?")) return;
+    try {
+      const r = await api("/api/admin/users/" + encodeURIComponent(id), { method: "DELETE" });
+      if (!r.ok) {
+        const txt = await safeText(r);
+        setMsg($("usersMsg"), "Delete failed: " + txt, "error");
+        return;
+      }
+      setMsg($("usersMsg"), "User deleted.", "success");
+      await refreshDashboard();
+    } catch (e) {
+      setMsg($("usersMsg"), String(e.message || e), "error");
     }
   }
 
@@ -829,6 +874,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     $("btnSaveWhatsapp").addEventListener("click", saveWhatsapp);
     $("btnUploadQr").addEventListener("click", uploadQr);
     $("btnCreateUser")?.addEventListener("click", createUser);
+    $("usersTable")?.addEventListener("click", (e) => {
+      const btn = e.target?.closest?.("button[data-user-del]");
+      if (!btn) return;
+      deleteUser(btn.getAttribute("data-user-del"), btn.getAttribute("data-user-del-name"));
+    });
 
     // Feedback moderation controls
     $("btnFbRefresh")?.addEventListener("click", () => refreshFeedback({ resetPage: false }));

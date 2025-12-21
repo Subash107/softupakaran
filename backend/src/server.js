@@ -431,6 +431,18 @@ app.patch("/api/admin/feedback/:id", adminRequired, async (req, res) => {
   }
 });
 
+app.delete("/api/admin/feedback/:id", adminRequired, async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) return res.status(400).json({ error: "Invalid id" });
+  try {
+    const result = await dbRun("DELETE FROM feedback WHERE id = ?", [id]);
+    if (!result.changes) return res.status(404).json({ error: "Not found" });
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to delete feedback" });
+  }
+});
+
 // ---------- admin users ----------
 app.get("/api/admin/users", adminRequired, async (_req, res) => {
   try {
@@ -440,6 +452,23 @@ app.get("/api/admin/users", adminRequired, async (_req, res) => {
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: "Failed to load users" });
+  }
+});
+
+app.delete("/api/admin/users/:id", adminRequired, async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) return res.status(400).json({ error: "Invalid id" });
+  try {
+    const user = await dbGet("SELECT id, role FROM users WHERE id = ?", [id]).catch(() => null);
+    if (!user) return res.status(404).json({ error: "Not found" });
+    if (String(user.role || "").toLowerCase() === "admin") {
+      return res.status(403).json({ error: "Cannot delete admin user" });
+    }
+    const result = await dbRun("DELETE FROM users WHERE id = ?", [id]);
+    if (!result.changes) return res.status(404).json({ error: "Not found" });
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to delete user" });
   }
 });
 
