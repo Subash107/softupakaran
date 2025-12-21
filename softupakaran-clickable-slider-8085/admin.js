@@ -1,4 +1,4 @@
-(() => {
+﻿(() => {
   const $ = (id) => document.getElementById(id);
 
   function setMsg(el, text, type = "info") {
@@ -414,8 +414,8 @@ function formatDate(v) {
     const r = parseInt(n, 10);
     if (!r || r < 1) return "";
     const clamped = Math.max(1, Math.min(5, r));
-    const filled = "?".repeat(clamped);
-    const empty = "?".repeat(5 - clamped);
+    const filled = "&#9733;".repeat(clamped);
+    const empty = "&#9734;".repeat(5 - clamped);
     return `<span class="stars" aria-label="${clamped} out of 5">${filled}${empty}</span>`;
   }
 
@@ -937,4 +937,5 @@ $("btnFbExport")?.addEventListener("click", exportFeedbackCsv);
     }
   });
 })();
+
 
