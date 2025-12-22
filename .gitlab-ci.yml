@@ -7,9 +7,8 @@ sanity:
   image: alpine:3.19
   script:
     - echo "CI running"
-  rules:
-    - if: $CI_COMMIT_BRANCH == "main"
-      when: on_success
+  only:
+    - main
 
 pages:
   stage: deploy
@@ -20,6 +19,5 @@ pages:
   artifacts:
     paths:
       - public
-  rules:
-    - if: $CI_COMMIT_BRANCH == "main"
-      when: on_success
+  only:
+    - main
