@@ -223,6 +223,7 @@ async function uploadBackupToDrive(filePath) {
   const ts = new Date().toISOString().replace(/[:.]/g, "-");
   const name = `softupakaran-backup-${ts}.db`;
   const res = await drive.files.create({
+    supportsAllDrives: true,
     requestBody: { name, parents: [folderId] },
     media: {
       mimeType: "application/x-sqlite3",

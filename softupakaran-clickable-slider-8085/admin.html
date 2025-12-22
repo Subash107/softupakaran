@@ -430,7 +430,7 @@ document.addEventListener('DOMContentLoaded', function() {
   if (testBtn) {
     testBtn.addEventListener('click', async function() {
       const base = (document.querySelector('#apiBase')?.value || window.API_BASE).replace(/\/$/, '');
-      const url = base + '/healthz';
+      const url = base + '/api/health';
       try {
         const res = await fetch(url, { cache: 'no-store' });
         const ok = res.ok ? 'OK' : ('HTTP ' + res.status);
