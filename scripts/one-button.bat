@@ -13,8 +13,13 @@ if errorlevel 1 (
 rem Optional: bring up local Docker stack if Docker is installed
 where docker >nul 2>nul
 if errorlevel 0 (
-  echo Starting Docker Compose...
-  docker compose up -d
+  docker info >nul 2>nul
+  if errorlevel 1 (
+    echo Docker found but not running. Skipping docker compose.
+  ) else (
+    echo Starting Docker Compose...
+    docker compose up -d
+  )
 ) else (
   echo Docker not found. Skipping docker compose.
 )
@@ -28,6 +33,18 @@ if errorlevel 1 (
 for /f %%A in ('git status --porcelain') do set HASCHANGES=1
 if not defined HASCHANGES (
   echo No changes to commit.
+  exit /b 0
+)
+
+echo.
+echo --- Changed files ---
+git status -sb
+echo.
+git diff --stat
+echo.
+set /p CONTINUE=Continue to commit and push? (y/N): 
+if /i not "%CONTINUE%"=="y" (
+  echo Aborted.
   exit /b 0
 )
 
