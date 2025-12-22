@@ -5,6 +5,7 @@ workflow:
 stages:
   - build
   - deploy
+  - backup
 
 sanity:
   stage: build
@@ -35,4 +36,16 @@ deploy_backend:
     - curl -fsS -X POST "$RENDER_DEPLOY_HOOK"
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
+      when: on_success
+
+backup_drive:
+  stage: backup
+  image: alpine:3.19
+  script:
+    - apk add --no-cache curl
+    - if [ -z "$BACKEND_URL" ]; then echo "Missing BACKEND_URL"; exit 1; fi
+    - if [ -z "$BACKUP_TOKEN" ]; then echo "Missing BACKUP_TOKEN"; exit 1; fi
+    - curl -fsS -X POST "$BACKEND_URL/api/admin/backup" -H "x-backup-token: $BACKUP_TOKEN"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
       when: on_success

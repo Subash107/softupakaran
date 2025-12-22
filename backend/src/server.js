@@ -9,6 +9,7 @@ const multer = require("multer");
 const crypto = require("crypto");
 const speakeasy = require("speakeasy");
 const qrcode = require("qrcode");
+const { google } = require("googleapis");
 
 const db = require("./db");
 const initDb = require("./init-db");
@@ -16,12 +17,15 @@ const initDb = require("./init-db");
 const app = express();
 const PORT = process.env.PORT || 4000;
 
+// Ensure correct protocol/host when behind a proxy (Render, etc.)
+app.set("trust proxy", 1);
 
 // healthcheck
 app.get('/healthz', (req, res) => res.json({ status: 'ok' }));
 const FRONTEND_URL = process.env.FRONTEND_URL || "https://lamasubash107.gitlab.io/softupakaran/";
 app.get('/', (_req, res) => res.redirect(302, FRONTEND_URL));const JWT_SECRET = process.env.JWT_SECRET || "dev_secret_change_me";
 const TOKEN_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
+const BACKUP_TOKEN = process.env.BACKUP_TOKEN || "";
 
 // Init DB schema + seed demo data
 initDb();
@@ -29,14 +33,18 @@ initDb();
 const corsOptions = {
   origin: (origin, cb) => cb(null, true), // dev: allow all; harden in prod
   credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Admin-Token"],
 };
 app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 app.use(express.json());
 
 // ---------- uploads (eSewa QR, etc.) ----------
 const uploadsDir = path.join(__dirname, "..", "uploads");
 fs.mkdirSync(uploadsDir, { recursive: true });
 app.use("/uploads", express.static(uploadsDir));
+const dbPath = process.env.DATABASE_FILE || path.join(__dirname, "..", "data", "softupakaran.db");
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadsDir),
@@ -109,16 +117,14 @@ async function setAdminTotpPending(secret) {
 
 function signToken(user) {
   // include email/name so the frontend can show "Signed in as ..." without an extra call
-  return jwt.sign(
-    {
-      userId: user.id,
-      role: user.role || "user",
-      email: user.email || undefined,
-      name: user.name || undefined,
-    },
-    JWT_SECRET,
-    { expiresIn: TOKEN_EXPIRES_IN }
-  );
+  const payload = {
+    userId: user.id,
+    role: user.role || "user",
+    email: user.email || undefined,
+    name: user.name || undefined,
+    totp: !!user.totp,
+  };
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: TOKEN_EXPIRES_IN });
 }
 
 function getAdminToken(req) {
@@ -154,19 +160,76 @@ function authRequired(req, res, next) {
   }
 }
 
-function adminRequired(req, res, next) {
-  if (hasLegacyAdminToken(req)) return next();
+async function adminRequired(req, res, next) {
+  const totpEnabled = !!(await getAdminTotpSecret().catch(() => ""));
+  if (hasLegacyAdminToken(req)) {
+    if (totpEnabled) return res.status(401).json({ error: "2FA required" });
+    return next();
+  }
   const header = req.headers.authorization || "";
   const token = header.startsWith("Bearer ") ? header.slice(7) : null;
   if (!token) return res.status(401).json({ error: "Unauthorized" });
   try {
     const payload = jwt.verify(token, JWT_SECRET);
     if (payload.role !== "admin") return res.status(403).json({ error: "Admin only" });
+    if (totpEnabled && payload.totp !== true) {
+      return res.status(401).json({ error: "2FA required" });
+    }
     req.user = payload;
     next();
   } catch (_) {
     return res.status(401).json({ error: "Unauthorized" });
   }
+}
+
+function backupAllowed(req) {
+  if (!BACKUP_TOKEN) return false;
+  const token = req.headers["x-backup-token"] || req.query.backup_token || "";
+  return token && token === BACKUP_TOKEN;
+}
+
+function backupAuth(req, res, next) {
+  if (backupAllowed(req)) return next();
+  return adminRequired(req, res, next);
+}
+
+function loadServiceAccount() {
+  const raw = process.env.GDRIVE_SA_JSON || "";
+  if (!raw) return null;
+  if (raw.trim().startsWith("{")) {
+    const parsed = JSON.parse(raw);
+    if (parsed.private_key) {
+      parsed.private_key = parsed.private_key.replace(/\\n/g, "\n");
+    }
+    return parsed;
+  }
+  return null;
+}
+
+async function uploadBackupToDrive(filePath) {
+  const folderId = process.env.GDRIVE_FOLDER_ID || "";
+  if (!folderId) throw new Error("Missing GDRIVE_FOLDER_ID");
+  const creds = loadServiceAccount();
+  if (!creds) throw new Error("Missing GDRIVE_SA_JSON");
+
+  const auth = new google.auth.JWT({
+    email: creds.client_email,
+    key: creds.private_key,
+    scopes: ["https://www.googleapis.com/auth/drive.file"],
+  });
+  const drive = google.drive({ version: "v3", auth });
+
+  const ts = new Date().toISOString().replace(/[:.]/g, "-");
+  const name = `softupakaran-backup-${ts}.db`;
+  const res = await drive.files.create({
+    requestBody: { name, parents: [folderId] },
+    media: {
+      mimeType: "application/x-sqlite3",
+      body: fs.createReadStream(filePath),
+    },
+    fields: "id,name,createdTime",
+  });
+  return res.data;
 }
 
 function publicUrl(req, pathname) {
@@ -280,12 +343,16 @@ app.post("/api/auth/login", async (req, res) => {
           window: 1,
         });
         if (!valid) return res.status(401).json({ error: "Invalid 2FA code" });
-        return res.json({ token: signToken(user), totp_enabled: true });
+        return res.json({ token: signToken({ ...user, totp: true }), totp_enabled: true });
       }
-      return res.json({ token: signToken(user), totp_enabled: false, needs_2fa_setup: true });
+      return res.json({
+        token: signToken({ ...user, totp: false }),
+        totp_enabled: false,
+        needs_2fa_setup: true,
+      });
     }
 
-    res.json({ token: signToken(user), totp_enabled: false });
+    res.json({ token: signToken({ ...user, totp: false }), totp_enabled: false });
   } catch (err) {
     console.error("Login failed:", err.message);
     res.status(500).json({ error: "Login failed" });
@@ -354,6 +421,17 @@ app.post("/api/admin/settings/esewa-qr", adminRequired, upload.single("qr"), asy
     });
   } catch (err) {
     res.status(500).json({ error: "Failed to save QR" });
+  }
+});
+
+// ---------- admin: backups ----------
+app.post("/api/admin/backup", backupAuth, async (_req, res) => {
+  try {
+    if (!fs.existsSync(dbPath)) return res.status(404).json({ error: "Database file not found" });
+    const info = await uploadBackupToDrive(dbPath);
+    res.json({ ok: true, file: info });
+  } catch (err) {
+    res.status(500).json({ error: "Backup failed", detail: err.message });
   }
 });
 
