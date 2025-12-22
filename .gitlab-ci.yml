@@ -1,23 +1,10 @@
-﻿stages:
-  - build
-  - deploy
-
-sanity:
-  stage: build
-  image: alpine:3.19
-  script:
-    - echo "CI running"
-  only:
-    - main
-
-pages:
-  stage: deploy
-  image: alpine:3.19
-  script:
-    - mkdir -p public
-    - cp -r softupakaran-clickable-slider-8085/* public/
-  artifacts:
-    paths:
-      - public
-  only:
-    - main
+# The Docker image that will be used to build your app
+image: softupakaran-with-feedback-and-floating-backend
+create-pages:
+  pages:
+    # The folder that contains the files to be exposed at the Page URL
+    publish: public
+  rules:
+    # This ensures that only pushes to the default branch will trigger
+    # a pages deploy
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
