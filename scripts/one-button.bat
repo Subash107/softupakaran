@@ -66,5 +66,21 @@ echo Pushing to gitlab...
 git push gitlab
 if errorlevel 1 exit /b 1
 
+rem Trigger Render deploy hook from .env (if present)
+for /f "usebackq tokens=1,* delims==" %%A in (".env") do (
+  if /i "%%A"=="RENDER_DEPLOY_HOOK" set "RENDER_DEPLOY_HOOK=%%B"
+)
+
+if defined RENDER_DEPLOY_HOOK (
+  echo Triggering Render deploy...
+  curl -s -X POST "%RENDER_DEPLOY_HOOK%" >nul
+  if errorlevel 1 (
+    echo Render deploy hook failed.
+    exit /b 1
+  )
+) else (
+  echo RENDER_DEPLOY_HOOK not set in .env. Skipping Render deploy.
+)
+
 echo Done.
 endlocal
