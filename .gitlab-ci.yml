@@ -8,7 +8,8 @@ sanity:
   script:
     - echo "CI running"
   rules:
-    - when: always
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: on_success
 
 pages:
   stage: deploy
@@ -20,4 +21,5 @@ pages:
     paths:
       - public
   rules:
-    - when: always
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: on_success
