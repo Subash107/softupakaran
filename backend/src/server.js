@@ -21,9 +21,10 @@ const PORT = process.env.PORT || 4000;
 app.set("trust proxy", 1);
 
 // healthcheck
-app.get('/healthz', (req, res) => res.json({ status: 'ok' }));
+app.get("/healthz", (req, res) => res.json({ status: "ok" }));
 const FRONTEND_URL = process.env.FRONTEND_URL || "https://lamasubash107.gitlab.io/softupakaran/";
-app.get('/', (_req, res) => res.redirect(302, FRONTEND_URL));const JWT_SECRET = process.env.JWT_SECRET || "dev_secret_change_me";
+app.get("/", (_req, res) => res.redirect(302, FRONTEND_URL));
+const JWT_SECRET = process.env.JWT_SECRET || "dev_secret_change_me";
 const TOKEN_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
 const BACKUP_TOKEN = process.env.BACKUP_TOKEN || "";
 
@@ -37,7 +38,7 @@ const corsOptions = {
   allowedHeaders: ["Content-Type", "Authorization", "X-Admin-Token"],
 };
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
+app.options(/.*/, cors(corsOptions));
 app.use(express.json());
 
 // ---------- uploads (eSewa QR, etc.) ----------
