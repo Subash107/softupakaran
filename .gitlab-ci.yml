@@ -32,11 +32,11 @@ deploy_backend:
   image: alpine:3.19
   script:
     - apk add --no-cache curl
-    - if [ -z "$RENDER_DEPLOY_HOOK" ]; then echo "Missing RENDER_DEPLOY_HOOK"; exit 1; fi
     - curl -fsS -X POST "$RENDER_DEPLOY_HOOK"
   rules:
-    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_BRANCH == "main" && $RENDER_DEPLOY_HOOK
       when: on_success
+    - when: never
 
 backup_drive:
   stage: backup
