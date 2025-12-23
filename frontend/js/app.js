@@ -221,6 +221,7 @@ function renderCategories(){
       </div>
     </a>
   `).join("");
+  ensureVisible(root);
 }
 
 function productCard(p){
