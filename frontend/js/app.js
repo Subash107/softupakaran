@@ -33,7 +33,7 @@ let WHATSAPP_NUMBER = "9779800000000";
 // Replace this with your real QR image path (put your QR inside /assets)
 let ESEWA_QR_IMAGE = "assets/esewa-qr-placeholder.svg";
 
-const API_BASE = (localStorage.getItem("SPK_API_BASE") || window.API_BASE).trim().replace(/\/$/, "");
+const API_BASE = (localStorage.getItem("SPK_API_BASE") || window.API_BASE || "").trim().replace(/\/$/, "");
 
 async function loadPublicSettings(){
   try{
@@ -477,7 +477,7 @@ async function sendOrderToBackend(extraNote){
     };
 
     // If your backend is on another host/port, change this URL.
-    await fetch("window.API_BASE/api/orders", {
+    await fetch(`${API_BASE}/api/orders`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
