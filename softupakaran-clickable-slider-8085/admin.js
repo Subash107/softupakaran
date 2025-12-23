@@ -992,7 +992,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const id = btn.getAttribute("data-fb-id");
       const action = btn.getAttribute("data-fb-action");
       try {
-        if (action === "approve") await fbSetStatus(id, "approved");
+        if (action === "approve") await fbSetStatus(id, "published");
         else if (action === "reject") await fbSetStatus(id, "rejected");
         else if (action === "delete") {
           if (!confirm("Delete this feedback permanently?")) return;
