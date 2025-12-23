@@ -12,7 +12,7 @@ services:
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
 
   frontend:
-    build: ./softupakaran-clickable-slider-8085
+    build: ./frontend
     ports:
       - "8085:80"
     depends_on:

@@ -28,7 +28,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: softupakaran-clickable-slider-8085
+          path: frontend
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

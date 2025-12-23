@@ -4,6 +4,8 @@ setlocal
 rem Move to repo root (parent of this script)
 cd /d "%~dp0.."
 
+rem Standard flow: one push to origin goes to both GitHub and GitLab (dual push URLs).
+
 where git >nul 2>nul
 if errorlevel 1 (
   echo git is not available in PATH
@@ -58,12 +60,24 @@ if errorlevel 1 (
   exit /b 1
 )
 
-echo Pushing to origin...
-git push origin
-if errorlevel 1 exit /b 1
+echo Push targets for origin:
+set PUSHCOUNT=0
+for /f %%A in ('git remote get-url --push --all origin') do (
+  echo %%A
+  set /a PUSHCOUNT+=1
+)
+if %PUSHCOUNT% LSS 2 (
+  echo Error: origin has only %PUSHCOUNT% push URL(s). Expected 2.
+  echo Fix with:
+  echo   git remote set-url --add --push origin https://github.com/Subash107/softupakaran.git
+  echo   git remote set-url --add --push origin https://gitlab.com/lamasubash107/softupakaran.git
+  echo Current remotes:
+  git remote -v
+  exit /b 1
+)
 
-echo Pushing to gitlab...
-git push gitlab
+echo Pushing to origin (GitHub + GitLab)...
+git push origin
 if errorlevel 1 exit /b 1
 
 rem Trigger Render deploy hook from scripts\deploy.env (if present)

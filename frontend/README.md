@@ -30,7 +30,7 @@ Open:
 - http://localhost:8081
 
 ## Replace products/images later
-Edit `app.js`:
+Edit `js/app.js`:
 - `categories`
 - `products`
 
@@ -41,7 +41,7 @@ Replace images in `/assets` with your real images and update paths if needed.
 This build changes the Cart **Checkout** button to open a payment modal.
 
 To set your WhatsApp and eSewa QR:
-- Open `app.js` and edit:
+- Open `js/app.js` and edit:
   - `WHATSAPP_NUMBER`
   - `ESEWA_QR_IMAGE`
 

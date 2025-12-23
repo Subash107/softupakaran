@@ -3,16 +3,17 @@
 <html lang="en">
 <head>
   <meta name="api-base" content="https://softupakaran-backend.onrender.com">
-<script src="js/env.js"></script>
+<meta name="google-client-id" content="161160759250-tvcu3a09i8gtdeaia6gpk04jo343oiet.apps.googleusercontent.com">
+  <script src="js/env.js"></script>
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
 <meta content="SoftUpakaran – Demo store UI inspired by Kunyo style. Replace products/images later." name="description"/>
-<title>SoftUpakaran • Category</title>
+<title>SoftUpakaran • Home</title>
 <link href="assets/logo.svg" rel="icon" type="image/svg+xml"/>
 <link href="styles.css" rel="stylesheet">
 </link>  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
-<body>
+<body class="home">
 <header class="topbar">
 <div class="container">
 <div class="nav">
@@ -22,12 +23,12 @@
 </a>
 <div aria-label="Search" class="search" role="search">
 <span style="opacity:.65">🔎</span>
-<input data-search="" placeholder="Search products (demo)..."/>
+<input data-search="" placeholder="Search products"/>
 <span class="hint">Ctrl+K</span>
 </div>
 <div class="navlinks">
 <a class="btn" href="index.html"><span>Home</span> 🏠</a>
-<a class="btn" data-open-cart="" href="#"><span>Cart</span> 🛒 <span class="badge" data-cart-count="">0</span></a>
+<a class="btn" data-open-cart="" href="product.html"><span>Cart</span> 🛒 <span class="badge" data-cart-count="">0</span></a>
 <div id="googleNavBtn" class="google-nav-btn" aria-label="Google sign in"></div>
 <a class="whatsapp-nav-btn" href="https://wa.me/97721121212121" aria-label="WhatsApp" title="WhatsApp"><svg viewBox="0 0 32 32" width="18" height="18" aria-hidden="true" focusable="false"><path fill="currentColor" d="M16 3C9.4 3 4 8.4 4 15c0 2.3.6 4.4 1.8 6.2L4 29l8-1.6c1.2.5 2.6.7 4 .7 6.6 0 12-5.4 12-12S22.6 3 16 3zm0 21.8c-1.2 0-2.4-.3-3.4-.8l-.5-.2-4.7.9.9-4.5-.3-.6c-.7-1.1-1-2.4-1-3.7 0-4.2 3.4-7.6 7.6-7.6s7.6 3.4 7.6 7.6-3.4 7.6-7.6 7.6zm4.2-5.7c-.2-.1-1.4-.7-1.6-.8-.2-.1-.4-.1-.6.1-.2.2-.7.8-.9 1-.1.2-.3.2-.5.1-1.8-.9-3-2.2-3.6-3.4-.2-.3 0-.5.1-.6.1-.1.2-.3.3-.4.1-.1.1-.2.2-.4.1-.1 0-.3 0-.4 0-.1-.6-1.5-.8-2-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.4.1-.6.3-.2.2-.8.8-.8 2s.8 2.3.9 2.5c.1.2 1.6 2.6 4 3.6 2.3 1 2.3.7 2.7.6.4-.1 1.4-.6 1.6-1.1.2-.5.2-.9.1-1z"/></svg></a>
 <span class="badge delivery-badge nav-badge">Instant Delivery</span></div>
@@ -38,15 +39,115 @@
 </div>
 </header>
 <main class="container">
+<section class="heroSlider" data-hero-slider="">
+<div class="heroSliderTrack">
+<div class="heroSlide">
+<img src="assets/banners/banner-1.png"/>
+<div class="heroOverlay">
+<div class="heroText">
+<h1 data-banner-title=""></h1>
+<p data-banner-sub=""></p>
+<a class="btn primary" href="category.html">Top up now</a>
+</div>
+</div>
+</div>
+<div class="heroSlide">
+<img src="assets/banners/banner-2.png"/>
+<div class="heroOverlay">
+<div class="heroText">
+<h1 data-banner-title=""></h1>
+<p data-banner-sub=""></p>
+<a class="btn primary" href="category.html">Top up now</a>
+</div>
+</div>
+</div>
+<div class="heroSlide">
+<img src="assets/banners/banner-3.png"/>
+<div class="heroOverlay">
+<div class="heroText">
+<h1 data-banner-title=""></h1>
+<p data-banner-sub=""></p>
+<a class="btn primary" href="category.html">Top up now</a>
+</div>
+</div>
+</div>
+<div class="heroSlide">
+<img src="assets/banners/banner-4.png"/>
+<div class="heroOverlay">
+<div class="heroText">
+<h1 data-banner-title=""></h1>
+<p data-banner-sub=""></p>
+<a class="btn primary" href="category.html">Top up now</a>
+</div>
+</div>
+</div>
+<div class="heroSlide">
+<img src="assets/banners/banner-5.png"/>
+<div class="heroOverlay">
+<div class="heroText">
+<h1 data-banner-title=""></h1>
+<p data-banner-sub=""></p>
+<a class="btn primary" href="category.html">Top up now</a>
+</div>
+</div>
+</div>
+</div>
+<div class="heroDots"></div>
+</section>
 <section class="section">
 <div class="sectionHeader">
 <div>
-<h2 data-category-title="">Category</h2>
-<p>Filter-style category page (demo).</p>
+<h2>Collections</h2>
+<p>Quick categories like Kunyo-style navigation.</p>
 </div>
-<a class="btn" href="index.html">Back</a>
 </div>
-<div class="grid" data-category-products=""></div>
+<div class="grid" data-categories=""></div>
+</section>
+<section class="section" id="popular">
+<div class="sectionHeader">
+<div>
+<h2><h2 class="section-title popular-animate"><span>Popular Products</span></h2></h2>
+<p>Demo products. Replace them in <span class="small">js/app.js</span>.</p>
+</div>
+<a class="btn" href="category.html?c=gift">View all</a>
+</div>
+<div class="grid" data-popular=""></div>
+</section>
+<section class="section">
+<div class="sectionHeader">
+<div>
+<h2>Why Choose Us</h2>
+<p>Simple steps &amp; instant delivery messaging.</p>
+</div>
+</div>
+<div class="features">
+<div class="feature">
+<h3>Smart Catalog</h3>
+<p>Find the exact top up or card in seconds with curated collections.</p>
+</div>
+<div class="feature">
+<h3>Fast Checkout</h3>
+<p>Transparent pricing and a single-screen checkout keep you moving.</p>
+</div>
+<div class="feature">
+<h3>Always On Support</h3>
+<p>Clear delivery status with WhatsApp follow-up when you need it.</p>
+</div>
+</div>
+</section>
+<section class="section">
+<div class="sectionHeader">
+<div>
+<h2>What They Say</h2>
+<p>Real feedback from customers.</p>
+</div>
+</div>
+<div class="testimonials" id="testimonialsList">
+  <div class="quote">
+    <p>“No feedback yet — be the first to leave a review from your Profile page.”</p>
+    <div class="who">— SoftUpakaran</div>
+  </div>
+</div>
 </section>
 </main>
 <footer class="footer">
@@ -95,17 +196,7 @@
 <div class="cartFooter" data-cart-footer=""></div>
 </div>
 </div>
-<script>
-    // Ctrl+K focus search
-    document.addEventListener("keydown", (e) => {
-      if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        const i = document.querySelector("[data-search]");
-        if(i) i.focus();
-      }
-    });
-  </script>
-<script src="app.js"></script>
+<script src="js/app.js"></script>
 <!-- Payment Modal -->
 <div aria-hidden="true" class="modalBackdrop" data-pay-modal="">
 <div aria-label="Payment options" class="modal" role="dialog">
@@ -117,8 +208,13 @@
 <div class="cartFooter" data-pay-footer=""></div>
 </div>
 </div>
-<script src="app.js"></script>
+<script src="js/app.js"></script>
+<script src="js/main.js"></script>
   <script src="js/auth-gate.js"></script>
+  <script src="js/scroll-animate.js"></script>
+  <script src="js/header-scroll-glow.js"></script>
+  <script src="js/banner-parallax.js"></script>
+  <script src="js/category-3d.js"></script>
   <script src="js/fix-runtime.js"></script>
   <script src="js/admin-visibility.js"></script>
   <script src="js/dev-api-override.js"></script>

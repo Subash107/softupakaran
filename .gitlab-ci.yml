@@ -20,7 +20,7 @@ pages:
   image: alpine:3.19
   script:
     - mkdir -p public
-    - cp -r softupakaran-clickable-slider-8085/* public/
+    - cp -r frontend/* public/
   artifacts:
     paths:
       - public

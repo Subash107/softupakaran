@@ -1,28 +1,28 @@
-/* === Banner Config (edit later easily) === */
+ï»¿/* === Banner Config (edit later easily) === */
 const BANNERS = [
   {
     title: "Top up Steam Wallet instantly",
-    sub: "Fast Steam gift cards • Secure payments",
+    sub: "Fast Steam gift cards ï¿½ Secure payments",
     link: "category.html?c=gift"
   },
   {
-    title: "Pay with eSewa • Instant Delivery",
-    sub: "Official Nepal payments • Trusted service",
+    title: "Pay with eSewa ï¿½ Instant Delivery",
+    sub: "Official Nepal payments ï¿½ Trusted service",
     link: "category.html?c=subs"
   },
   {
     title: "Free Fire Pins available",
-    sub: "UID top-up • Fast processing: Nepal",
+    sub: "UID top-up ï¿½ Fast processing: Nepal",
     link: "category.html?c=freefire"
   },
   {
     title: "UC Top Up for PUBG",
-    sub: "Global UC • Secure & instant",
+    sub: "Global UC ï¿½ Secure & instant",
     link: "category.html?c=pubg"
   },
   {
     title: "Netflix & Subscriptions",
-    sub: "Premium plans • Easy activation",
+    sub: "Premium plans ï¿½ Easy activation",
     link: "category.html?c=subs"
   }
 ];
@@ -104,8 +104,8 @@ async function loadTestimonials(){
       const meta = `${starsHtml(r.rating)}${when ? `<span class="when">${escapeHtml(when)}</span>` : ""}`;
       return `
         <div class="quote">
-          <p>“${msg}”</p>
-          <div class="who">— ${escapeHtml(who)}</div>
+          <p>ï¿½${msg}ï¿½</p>
+          <div class="who">ï¿½ ${escapeHtml(who)}</div>
           ${meta ? `<div class="metaLine">${meta}</div>` : ""}
         </div>
       `;
@@ -263,14 +263,14 @@ function renderCategoryPage(){
   if(!root) return;
   const id = getParam("c") || "gift";
   const cat = categories.find(x => x.id === id);
-  document.title = `${cat ? cat.name : "Category"} • SoftUpakaran`;
+  document.title = `${cat ? cat.name : "Category"} ï¿½ SoftUpakaran`;
   const header = document.querySelector("[data-category-title]");
   if(header) header.textContent = cat ? cat.name : "Category";
   const filtered = products.filter(p => p.category === id);
   root.innerHTML = filtered.length ? filtered.map(productCard).join("") : `
     <div class="card"><div class="pad">
       <p class="cardTitle">No items yet</p>
-      <p class="cardMeta">Add your real products later in <span class="small">app.js</span>.</p>
+      <p class="cardMeta">Add your real products later in <span class="small">js/app.js</span>.</p>
     </div></div>`;
   wireAddButtons(root);
 }
@@ -280,7 +280,7 @@ function renderProductPage(){
   if(!root) return;
   const id = getParam("id") || "p1";
   const p = products.find(x => x.id === id) || products[0];
-  document.title = `${p.name} • SoftUpakaran`;
+  document.title = `${p.name} ï¿½ SoftUpakaran`;
   root.innerHTML = `
     <div class="heroGrid">
       <div class="heroCard">
@@ -295,7 +295,7 @@ function renderProductPage(){
           <p class="sub">${p.note}. Replace the text with your exact instructions (UID, region restrictions, etc.).</p>
           <div style="margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
             <div class="badge">${formatNPR(p.price)}</div>
-            <div class="small">Secure checkout • Support chat</div>
+            <div class="small">Secure checkout ï¿½ Support chat</div>
           </div>
           <div class="heroActions">
             <button class="btn primary" id="buyNow">Add to cart</button>
@@ -304,7 +304,7 @@ function renderProductPage(){
           <div style="margin-top:18px">
             <div class="feature">
               <h3>Steps</h3>
-              <p>1) Select denomination • 2) Enter Player ID • 3) Pay • 4) Get delivery</p>
+              <p>1) Select denomination ï¿½ 2) Enter Player ID ï¿½ 3) Pay ï¿½ 4) Get delivery</p>
             </div>
           </div>
         </div>
@@ -351,7 +351,7 @@ function renderCart(){
       <p class="cardTitle">Your cart is empty</p>
       <p class="cardMeta">Add some products to continue.</p>
     </div></div>`;
-    footer.innerHTML = `<div class="notice">Tip: click “Add” on any product.</div>
+    footer.innerHTML = `<div class="notice">Tip: click ï¿½Addï¿½ on any product.</div>
       <button class="btn primary" data-cart-close>Continue shopping</button>`;
     footer.querySelector("[data-cart-close]")?.addEventListener("click", closeCart);
     updateCartCount();
@@ -363,7 +363,7 @@ function renderCart(){
       <img src="${l.img}" alt="${l.name}">
       <div>
         <p class="name">${l.name}</p>
-        <p class="desc">${formatNPR(l.price)} • ${l.note}</p>
+        <p class="desc">${formatNPR(l.price)} ï¿½ ${l.note}</p>
       </div>
       <div class="qty">
         <button aria-label="Decrease" data-dec="${l.id}">-</button>
@@ -491,7 +491,7 @@ async function sendOrderToBackend(extraNote){
 function buildWhatsAppMessage(){
   const lines = cartLines();
   const total = cartTotal();
-  const items = lines.map(l => `• ${l.name} x${l.qty} = ${formatNPR(l.lineTotal)}`).join("\n");
+  const items = lines.map(l => `ï¿½ ${l.name} x${l.qty} = ${formatNPR(l.lineTotal)}`).join("\n");
   return `Hello SoftUpakaran,\n\nI want to order:\n${items}\n\nTotal: ${formatNPR(total)}\n\nPlease guide me for payment & delivery.`;
 }
 
@@ -509,7 +509,7 @@ function openPayModal(){
         <h4>Pay via WhatsApp</h4>
         <p>Send your cart details to WhatsApp. We can confirm price and deliver instantly.</p>
         <button class="btn primary" data-pay-wa>Open WhatsApp</button>
-        <div class="small" style="margin-top:10px">Tip: replace number in <span class="small">app.js</span></div>
+        <div class="small" style="margin-top:10px">Tip: replace number in <span class="small">js/app.js</span></div>
       </div>
 
       <div class="payCard">
@@ -698,7 +698,7 @@ function mountFeedback(){
     <div class="feedbackCard">
       <div class="feedbackHeader">
         <div class="feedbackTitle">Share your feedback</div>
-        <button class="feedbackClose" aria-label="Close">×</button>
+        <button class="feedbackClose" aria-label="Close">ï¿½</button>
       </div>
       <div class="feedbackForm" role="form">
         <label>Rating</label>

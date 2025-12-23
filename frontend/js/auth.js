@@ -1,7 +1,7 @@
 // why: simple real auth flow for demo; stores JWT, updates UI, no framework
 (function(){
   // Default: talk to backend running via Docker compose on localhost:4000.
-  // Can be overridden (shared with app.js/admin.js) by setting localStorage.SPK_API_BASE.
+  // Can be overridden (shared with js/app.js/js/admin.js) by setting localStorage.SPK_API_BASE.
   function normalizeBase(v){
     return (v && v.trim()) ? v.trim().replace(/\/$/, "") : "";
   }
