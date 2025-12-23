@@ -34,7 +34,7 @@ deploy_backend:
     - apk add --no-cache curl
     - curl -fsS -X POST "$RENDER_DEPLOY_HOOK"
   rules:
-    - if: $CI_COMMIT_BRANCH == "main" && $RENDER_DEPLOY_HOOK
+    - if: '$CI_COMMIT_BRANCH == "main" && $RENDER_DEPLOY_HOOK'
       when: on_success
     - when: never
 
