@@ -1,28 +1,28 @@
-﻿/* === Banner Config (edit later easily) === */
+/* === Banner Config (edit later easily) === */
 const BANNERS = [
   {
     title: "Top up Steam Wallet instantly",
-    sub: "Fast Steam gift cards • Secure payments",
+    sub: "Fast Steam gift cards � Secure payments",
     link: "category.html?c=gift"
   },
   {
-    title: "Pay with eSewa • Instant Delivery",
-    sub: "Official Nepal payments • Trusted service",
+    title: "Pay with eSewa � Instant Delivery",
+    sub: "Official Nepal payments � Trusted service",
     link: "category.html?c=subs"
   },
   {
     title: "Free Fire Pins available",
-    sub: "UID top-up • Fast processing: Nepal",
+    sub: "UID top-up � Fast processing: Nepal",
     link: "category.html?c=freefire"
   },
   {
     title: "UC Top Up for PUBG",
-    sub: "Global UC • Secure & instant",
+    sub: "Global UC � Secure & instant",
     link: "category.html?c=pubg"
   },
   {
     title: "Netflix & Subscriptions",
-    sub: "Premium plans • Easy activation",
+    sub: "Premium plans � Easy activation",
     link: "category.html?c=subs"
   }
 ];
@@ -76,11 +76,11 @@ function fmtDateShort(iso){
 function starsHtml(rating){
   const r = parseInt(rating,10);
   if(!r || r < 1 || r > 5) return "";
-  const filled = "★".repeat(r);
-  const empty = "☆".repeat(5-r);
+  const filled = "?".repeat(r);
+  const empty = "?".repeat(5-r);
   return `<span class="stars" aria-label="${r} out of 5">`+
-         `${[...filled].map(()=>`<span class="star">★</span>`).join("")}`+
-         `${[...empty].map(()=>`<span class="star" style="opacity:.35">☆</span>`).join("")}`+
+         `${[...filled].map(()=>`<span class="star">?</span>`).join("")}`+
+         `${[...empty].map(()=>`<span class="star" style="opacity:.35">?</span>`).join("")}`+
          `</span>`;
 }
 
@@ -104,8 +104,8 @@ async function loadTestimonials(){
       const meta = `${starsHtml(r.rating)}${when ? `<span class="when">${escapeHtml(when)}</span>` : ""}`;
       return `
         <div class="quote">
-          <p>“${msg}”</p>
-          <div class="who">— ${escapeHtml(who)}</div>
+          <p>�${msg}�</p>
+          <div class="who">� ${escapeHtml(who)}</div>
           ${meta ? `<div class="metaLine">${meta}</div>` : ""}
         </div>
       `;
@@ -127,25 +127,24 @@ async function loadTestimonials(){
 const STORE_KEY = "softupakaran_cart_v1";
 
 let categories = [
-  { id:"freefire", name:"Free Fire Top Up", tag:"Top up diamonds instantly", icon:"🔥" },
-  { id:"pubg", name:"PUBG UC", tag:"UC pins & UID top-up", icon:"🎮" },
-  { id:"gift", name:"Gift Cards", tag:"Steam, Google Play & more", icon:"🎁" },
-  { id:"subs", name:"Subscriptions", tag:"Netflix, Spotify, Prime", icon:"⭐" },
+  { id:"freefire", name:"Free Fire Top Up", tag:"Top up diamonds instantly", icon:"??" },
+  { id:"pubg", name:"PUBG UC", tag:"UC pins & UID top-up", icon:"??" },
+  { id:"gift", name:"Gift Cards", tag:"Steam, Google Play & more", icon:"??" },
+  { id:"subs", name:"Subscriptions", tag:"Netflix, Spotify, Prime", icon:"?" },
   { id:"spotify", name:"Spotify", tag:"Premium plans & top-ups", icon:"SP" },
-  { id:"social", name:"Social Media Boost", tag:"Coins, credits & boosts", icon:"📣" },
-  { id:"gears", name:"Gaming Gears", tag:"Mice, headsets, keyboards", icon:"🖱️" },
+  { id:"social", name:"Social Media Boost", tag:"Coins, credits & boosts", icon:"??" },
+  { id:"gears", name:"Gaming Gears", tag:"Mice, headsets, keyboards", icon:"???" },
 ];
 
 let products = [
-  { id:"p1", name:"PUBG 60 UC (Global)", category:"pubg", price:157, img:"assets/product-1.svg", note:"Instant delivery • UID" },
-  { id:"p2", name:"Free Fire Diamonds (Direct UID)", category:"freefire", price:80, img:"assets/product-2.svg", note:"Fast top-up • Secure" },
-  { id:"p3", name:"Steam Wallet Code $10", category:"gift", price:1500, img:"assets/product-3.svg", note:"Digital code • US/Global" },
-  { id:"p4", name:"Netflix Subscription (1 Month)", category:"subs", price:999, img:"assets/product-4.svg", note:"Easy activation" },
-  { id:"p9", name:"Spotify Premium (1 Month)", category:"spotify", price:499, img:"assets/product-3.svg", note:"Instant activation" },
-  { id:"p5", name:"Google Play Gift Card $5", category:"gift", price:750, img:"assets/product-5.svg", note:"US region" },
-  { id:"p6", name:"MLBB Diamonds (1000+)", category:"pubg", price:800, img:"assets/product-6.svg", note:"UID + Zone" },
-  { id:"p7", name:"TikTok Coins Pack", category:"social", price:350, img:"assets/product-7.svg", note:"Quick processing" },
-  { id:"p8", name:"RGB Gaming Mouse (Budget)", category:"gears", price:1200, img:"assets/product-8.svg", note:"1 year warranty" },
+  { id:"p1", name:"Free Fire 530 Diamonds", category:"freefire", price:999, img:"assets/product-2.svg", note:"Direct UID - Instant delivery" },
+  { id:"p2", name:"PUBG UC 600 (Global)", category:"pubg", price:1300, img:"assets/product-1.svg", note:"UID top-up - 5-10 min" },
+  { id:"p3", name:"Google Play Gift Card $10", category:"gift", price:1550, img:"assets/product-5.svg", note:"US region - Digital code" },
+  { id:"p4", name:"Steam Wallet Code $20", category:"gift", price:3100, img:"assets/product-3.svg", note:"Global/US - Instant code" },
+  { id:"p5", name:"Netflix Premium (1 Month)", category:"subs", price:1299, img:"assets/product-4.svg", note:"Shared profile - 4K" },
+  { id:"p6", name:"Spotify Premium (3 Months)", category:"spotify", price:1199, img:"assets/product-3.svg", note:"Activation within 1 hour" },
+  { id:"p7", name:"TikTok Coins 350", category:"social", price:650, img:"assets/product-7.svg", note:"Nepal payment - Quick delivery" },
+  { id:"p8", name:"Gaming Mouse RGB (Budget)", category:"gears", price:1499, img:"assets/product-8.svg", note:"2-year warranty - DPI 6400" },
 ];
 
 function formatNPR(n){
@@ -264,7 +263,7 @@ function renderCategoryPage(){
   if(!root) return;
   const id = getParam("c") || "gift";
   const cat = categories.find(x => x.id === id);
-  document.title = `${cat ? cat.name : "Category"} • SoftUpakaran`;
+  document.title = `${cat ? cat.name : "Category"} � SoftUpakaran`;
   const header = document.querySelector("[data-category-title]");
   if(header) header.textContent = cat ? cat.name : "Category";
   const filtered = products.filter(p => p.category === id);
@@ -281,7 +280,7 @@ function renderProductPage(){
   if(!root) return;
   const id = getParam("id") || "p1";
   const p = products.find(x => x.id === id) || products[0];
-  document.title = `${p.name} • SoftUpakaran`;
+  document.title = `${p.name} � SoftUpakaran`;
   root.innerHTML = `
     <div class="heroGrid">
       <div class="heroCard">
@@ -296,7 +295,7 @@ function renderProductPage(){
           <p class="sub">${p.note}. Replace the text with your exact instructions (UID, region restrictions, etc.).</p>
           <div style="margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
             <div class="badge">${formatNPR(p.price)}</div>
-            <div class="small">Secure checkout • Support chat</div>
+            <div class="small">Secure checkout � Support chat</div>
           </div>
           <div class="heroActions">
             <button class="btn primary" id="buyNow">Add to cart</button>
@@ -305,7 +304,7 @@ function renderProductPage(){
           <div style="margin-top:18px">
             <div class="feature">
               <h3>Steps</h3>
-              <p>1) Select denomination • 2) Enter Player ID • 3) Pay • 4) Get delivery</p>
+              <p>1) Select denomination � 2) Enter Player ID � 3) Pay � 4) Get delivery</p>
             </div>
           </div>
         </div>
@@ -352,7 +351,7 @@ function renderCart(){
       <p class="cardTitle">Your cart is empty</p>
       <p class="cardMeta">Add some products to continue.</p>
     </div></div>`;
-    footer.innerHTML = `<div class="notice">Tip: click “Add” on any product.</div>
+    footer.innerHTML = `<div class="notice">Tip: click �Add� on any product.</div>
       <button class="btn primary" data-cart-close>Continue shopping</button>`;
     footer.querySelector("[data-cart-close]")?.addEventListener("click", closeCart);
     updateCartCount();
@@ -364,10 +363,10 @@ function renderCart(){
       <img src="${l.img}" alt="${l.name}">
       <div>
         <p class="name">${l.name}</p>
-        <p class="desc">${formatNPR(l.price)} • ${l.note}</p>
+        <p class="desc">${formatNPR(l.price)} � ${l.note}</p>
       </div>
       <div class="qty">
-        <button aria-label="Decrease" data-dec="${l.id}">−</button>
+        <button aria-label="Decrease" data-dec="${l.id}">-</button>
         <span>${l.qty}</span>
         <button aria-label="Increase" data-inc="${l.id}">+</button>
       </div>
@@ -492,7 +491,7 @@ async function sendOrderToBackend(extraNote){
 function buildWhatsAppMessage(){
   const lines = cartLines();
   const total = cartTotal();
-  const items = lines.map(l => `• ${l.name} x${l.qty} = ${formatNPR(l.lineTotal)}`).join("\n");
+  const items = lines.map(l => `� ${l.name} x${l.qty} = ${formatNPR(l.lineTotal)}`).join("\n");
   return `Hello SoftUpakaran,\n\nI want to order:\n${items}\n\nTotal: ${formatNPR(total)}\n\nPlease guide me for payment & delivery.`;
 }
 
@@ -690,7 +689,7 @@ function mountFeedback(){
   const btn = document.createElement("button");
   btn.className = "feedbackButton";
   btn.setAttribute("type","button");
-  btn.innerHTML = "✉️ Feedback";
+  btn.innerHTML = "?? Feedback";
   document.body.appendChild(btn);
 
   const overlay = document.createElement("div");
@@ -699,12 +698,12 @@ function mountFeedback(){
     <div class="feedbackCard">
       <div class="feedbackHeader">
         <div class="feedbackTitle">Share your feedback</div>
-        <button class="feedbackClose" aria-label="Close">×</button>
+        <button class="feedbackClose" aria-label="Close">�</button>
       </div>
       <div class="feedbackForm" role="form">
         <label>Rating</label>
         <div class="starRow" data-stars="">
-          ${[1,2,3,4,5].map(i => `<span class="star" data-val="${i}">⭐</span>`).join("")}
+          ${[1,2,3,4,5].map(i => `<span class="star" data-val="${i}">?</span>`).join("")}
         </div>
         <label>Message</label>
         <textarea rows="4" placeholder="What can we improve?" data-fb-msg=""></textarea>
@@ -750,7 +749,7 @@ function mountFeedback(){
       ok = await postJSON(`${API_BASE}/api/public/feedback`, payload);
     }
     if(!ok && typeof WHATSAPP_NUMBER === "string" && WHATSAPP_NUMBER){
-      const text = `Feedback%0A${location.href}%0A⭐: ${rating}%0A${encodeURIComponent(msg)}`;
+      const text = `Feedback%0A${location.href}%0A?: ${rating}%0A${encodeURIComponent(msg)}`;
       const url = `https://wa.me/${WHATSAPP_NUMBER.replace(/[^0-9]/g,"")}?text=${text}`;
       window.open(url, "_blank");
       ok = true; // treat as sent
@@ -765,6 +764,7 @@ document.addEventListener("DOMContentLoaded", () => {
   try{ mountFeedback(); }catch(e){ console.warn("Feedback widget failed:", e); }
 });
 /* === end Feedback Widget === */
+
 
 
 

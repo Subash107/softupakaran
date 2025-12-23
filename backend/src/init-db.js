@@ -121,19 +121,20 @@ function initDb() {
         { id: "pubg", name: "PUBG UC", tag: "UC pins & UID top-up", icon: "🎮" },
         { id: "gift", name: "Gift Cards", tag: "Steam, Google Play & more", icon: "🎁" },
         { id: "subs", name: "Subscriptions", tag: "Netflix, Spotify, Prime", icon: "⭐" },
+        { id: "spotify", name: "Spotify", tag: "Premium plans & top-ups", icon: "SP" },
         { id: "social", name: "Social Media Boost", tag: "Coins, credits & boosts", icon: "📣" },
         { id: "gears", name: "Gaming Gears", tag: "Mice, headsets, keyboards", icon: "🖱️" }
       ];
 
       const products = [
-        { id: "p1", name: "PUBG 60 UC (Global)", category: "pubg", price: 140, img: "assets/product-1.svg", note: "Instant delivery • UID" },
-        { id: "p2", name: "Free Fire Diamonds (Direct UID)", category: "freefire", price: 80, img: "assets/product-2.svg", note: "Fast top-up • Secure" },
-        { id: "p3", name: "Steam Wallet Code $10", category: "gift", price: 1500, img: "assets/product-3.svg", note: "Digital code • Global" },
-        { id: "p4", name: "Netflix Subscription (1 Month)", category: "subs", price: 999, img: "assets/product-4.svg", note: "Easy activation" },
-        { id: "p5", name: "Google Play Gift Card $5", category: "gift", price: 750, img: "assets/product-5.svg", note: "US region" },
-        { id: "p6", name: "MLBB Diamonds (1000+)", category: "pubg", price: 800, img: "assets/product-6.svg", note: "UID + Zone" },
-        { id: "p7", name: "TikTok Coins Pack", category: "social", price: 350, img: "assets/product-7.svg", note: "Quick processing" },
-        { id: "p8", name: "RGB Gaming Mouse (Budget)", category: "gears", price: 1200, img: "assets/product-8.svg", note: "1 year warranty" }
+        { id: "p1", name: "Free Fire 530 Diamonds", category: "freefire", price: 999, img: "assets/product-2.svg", note: "Direct UID - Instant delivery" },
+        { id: "p2", name: "PUBG UC 600 (Global)", category: "pubg", price: 1300, img: "assets/product-1.svg", note: "UID top-up - 5-10 min" },
+        { id: "p3", name: "Google Play Gift Card $10", category: "gift", price: 1550, img: "assets/product-5.svg", note: "US region - Digital code" },
+        { id: "p4", name: "Steam Wallet Code $20", category: "gift", price: 3100, img: "assets/product-3.svg", note: "Global/US - Instant code" },
+        { id: "p5", name: "Netflix Premium (1 Month)", category: "subs", price: 1299, img: "assets/product-4.svg", note: "Shared profile - 4K" },
+        { id: "p6", name: "Spotify Premium (3 Months)", category: "spotify", price: 1199, img: "assets/product-3.svg", note: "Activation within 1 hour" },
+        { id: "p7", name: "TikTok Coins 350", category: "social", price: 650, img: "assets/product-7.svg", note: "Nepal payment - Quick delivery" },
+        { id: "p8", name: "Gaming Mouse RGB (Budget)", category: "gears", price: 1499, img: "assets/product-8.svg", note: "2-year warranty - DPI 6400" }
       ];
 
       const catStmt = db.prepare("INSERT INTO categories (id, name, tag, icon) VALUES (?, ?, ?, ?)");
@@ -150,4 +151,6 @@ function initDb() {
 }
 
 module.exports = initDb;
+
+
 
