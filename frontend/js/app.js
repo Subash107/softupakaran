@@ -199,6 +199,12 @@ function cartTotal(){
 function $(sel, root=document){ return root.querySelector(sel); }
 function $all(sel, root=document){ return Array.from(root.querySelectorAll(sel)); }
 
+function ensureVisible(root=document){
+  $all(".card, .product-card, .product-item", root)
+    .forEach(el => el.classList.add("in-view"));
+}
+
+
 function renderCategories(){
   const root = document.querySelector("[data-categories]");
   if(!root) return;
@@ -251,6 +257,7 @@ function renderPopular(){
   const items = products.slice(0, 8);
   root.innerHTML = items.map(productCard).join("");
   wireAddButtons(root);
+  ensureVisible(root);
 }
 
 function getParam(name){
@@ -273,6 +280,7 @@ function renderCategoryPage(){
       <p class="cardMeta">Add your real products later in <span class="small">js/app.js</span>.</p>
     </div></div>`;
   wireAddButtons(root);
+  ensureVisible(root);
 }
 
 function renderProductPage(){
@@ -453,6 +461,7 @@ function wireSearch(){
       </div></div>
     `;
     wireAddButtons(root);
+  ensureVisible(root);
   });
 }
 
