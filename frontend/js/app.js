@@ -1,29 +1,29 @@
 ﻿/* === Banner Config (edit later easily) === */
 const BANNERS = [
   {
-    title: "Top up Steam Wallet instantly",
-    sub: "Fast Steam gift cards � Secure payments",
-    link: "category.html?c=gift"
+    title: "Premium subscriptions in Nepal",
+    sub: "Netflix, Canva, ChatGPT, and more",
+    link: "category.html?c=subscriptions"
   },
   {
-    title: "Pay with eSewa � Instant Delivery",
-    sub: "Official Nepal payments � Trusted service",
-    link: "category.html?c=subs"
+    title: "WordPress plugins and SEO tools",
+    sub: "Speed, security, and conversion upgrades",
+    link: "category.html?c=wp-plugins"
   },
   {
-    title: "Free Fire Pins available",
-    sub: "UID top-up � Fast processing: Nepal",
-    link: "category.html?c=freefire"
+    title: "Modern WordPress themes",
+    sub: "Blog, news, and store-ready templates",
+    link: "category.html?c=wp-themes"
   },
   {
-    title: "UC Top Up for PUBG",
-    sub: "Global UC � Secure & instant",
-    link: "category.html?c=pubg"
+    title: "Netflix plans and profiles",
+    sub: "Affordable access with instant activation",
+    link: "category.html?c=netflix"
   },
   {
-    title: "Netflix & Subscriptions",
-    sub: "Premium plans � Easy activation",
-    link: "category.html?c=subs"
+    title: "Web development packages",
+    sub: "Custom builds for businesses",
+    link: "category.html?c=web-development"
   }
 ];
 
@@ -34,7 +34,96 @@ let WHATSAPP_NUMBER = "9779800000000";
 let ESEWA_QR_IMAGE = "assets/esewa-qr-placeholder.svg";
 
 const API_BASE = (localStorage.getItem("SPK_API_BASE") || window.API_BASE || "").trim().replace(/\/$/, "");
+const ILM_STORE_API = "https://store.ilovemithila.com/wp-json/wc/store";
 
+const CATEGORY_ORDER = [
+  "subscriptions",
+  "netflix",
+  "wp-plugins",
+  "wp-themes",
+  "ecommerce",
+  "vpn",
+  "web-development"
+];
+
+const CATEGORY_NOTES = {
+  "subscriptions": "Instant activation",
+  "netflix": "Premium access - instant",
+  "wp-plugins": "GPL license - instant download",
+  "wp-themes": "Theme files - instant download",
+  "ecommerce": "WooCommerce-ready package",
+  "vpn": "Private browsing - 1 year",
+  "web-development": "Custom delivery - contact us"
+};
+
+const ILM_CATEGORY_SLUG_MAP = {
+  "subscription": "subscriptions",
+  "wordpress-plugins": "wp-plugins",
+  "wordpress-themes": "wp-themes",
+  "ecommerce-themes-plugins": "ecommerce",
+  "vpn-in-nepal": "vpn",
+  "web-development": "web-development"
+};
+
+const DEFAULT_CATEGORIES = [
+  { id:"subscriptions", name:"Subscriptions", tag:"Premium tools and streaming", icon:"SUB" },
+  { id:"netflix", name:"Netflix", tag:"Plans and profiles", icon:"NF" },
+  { id:"wp-plugins", name:"WP Plugins", tag:"SEO, cache, security tools", icon:"PL" },
+  { id:"wp-themes", name:"WP Themes", tag:"Blog, news, and shop themes", icon:"TH" },
+  { id:"ecommerce", name:"eCommerce", tag:"WooCommerce themes and plugins", icon:"EC" },
+  { id:"vpn", name:"VPN", tag:"Secure browsing plans", icon:"VPN" },
+  { id:"web-development", name:"Web Development", tag:"Custom website builds", icon:"WEB" }
+];
+
+const DEFAULT_PRODUCTS = [
+  { id:"ilm-12291", name:"Cheapest Netflix Subscription", category:"netflix", price:180, img:"https://store.ilovemithila.com/wp-content/uploads/2025/12/netflix-in-nepal.jpg", note:CATEGORY_NOTES.netflix },
+  { id:"ilm-12260", name:"Canva Pro in Nepal", category:"subscriptions", price:99, img:"https://store.ilovemithila.com/wp-content/uploads/2025/11/canva-nepal.jpg", note:CATEGORY_NOTES.subscriptions },
+  { id:"ilm-12259", name:"Windows 11 Pro Key in Nepal", category:"subscriptions", price:1599, img:"https://store.ilovemithila.com/wp-content/uploads/2025/10/windows-11-pro-retail-key-500x500-1.webp", note:CATEGORY_NOTES.subscriptions },
+  { id:"ilm-12253", name:"Google AI Ultra in Nepal", category:"subscriptions", price:1500, img:"https://store.ilovemithila.com/wp-content/uploads/2025/10/GoogleAIUltra_SS_1920x1080.width-1300.png", note:CATEGORY_NOTES.subscriptions },
+  { id:"ilm-12213", name:"ChatGPT Premium in Nepal", category:"subscriptions", price:299, img:"https://store.ilovemithila.com/wp-content/uploads/2025/08/chatgpt-1.jpg", note:CATEGORY_NOTES.subscriptions },
+  { id:"ilm-10960", name:"Google One (AI Pro) in Nepal", category:"subscriptions", price:1200, img:"https://store.ilovemithila.com/wp-content/uploads/2025/07/subs-1.png", note:CATEGORY_NOTES.subscriptions },
+  { id:"ilm-11480", name:"IP Vanish - 1 Year VPN in Nepal", category:"vpn", price:599, img:"https://store.ilovemithila.com/wp-content/uploads/2025/09/ipvanish-400x225-usjc.webp", note:CATEGORY_NOTES.vpn },
+  { id:"ilm-12240", name:"Hostiko 94.3.4 - Hosting WordPress and WHMCS Theme", category:"wp-themes", price:350, img:"https://store.ilovemithila.com/wp-content/uploads/2025/11/hostiko-wordpress-theme.jpg", note:CATEGORY_NOTES["wp-themes"] },
+  { id:"ilm-12102", name:"KiviCare 2.2.14 - Clinic and Patient Management", category:"wp-themes", price:350, img:"https://store.ilovemithila.com/wp-content/uploads/2025/09/kivi.png", note:CATEGORY_NOTES["wp-themes"] },
+  { id:"ilm-11226", name:"WP Rocket 3.20.1.1 - WordPress Caching Plugin", category:"wp-plugins", price:299, img:"https://store.ilovemithila.com/wp-content/uploads/2025/05/wp-rocket-nasil-kurulur.jpg.webp", note:CATEGORY_NOTES["wp-plugins"] },
+  { id:"ilm-12108", name:"Dokan Pro 4.1.3 - Multivendor Marketplace Plugin", category:"wp-plugins", price:299, img:"https://store.ilovemithila.com/wp-content/uploads/2025/09/Dokan-Pro-Multivendor-Marketplace-Plugin-for-WordPress.jpg.jpg", note:CATEGORY_NOTES["wp-plugins"] },
+  { id:"ilm-11499", name:"Search and Filter Pro 3.1.8 - WP Plugin", category:"wp-plugins", price:299, img:"https://store.ilovemithila.com/wp-content/uploads/2025/08/Search-Filter-Pro-Search-and-Filtering-for-WordPress.jpg", note:CATEGORY_NOTES["wp-plugins"] },
+  { id:"ilm-10907", name:"Elementor Pro 3.33.2 - Page Builder", category:"wp-plugins", price:299, img:"https://store.ilovemithila.com/wp-content/uploads/2025/05/Elementor_Pro_Package_cleanup.png", note:CATEGORY_NOTES["wp-plugins"] },
+  { id:"ilm-11020", name:"W3 Total Cache Pro 2.8.14 - WordPress Cache Plugin", category:"wp-plugins", price:299, img:"https://store.ilovemithila.com/wp-content/uploads/2025/05/w3-cache-.jpg", note:CATEGORY_NOTES["wp-plugins"] },
+  { id:"ilm-11035", name:"Solid Security Pro 8.6.3 - WP Plugin", category:"wp-plugins", price:299, img:"https://store.ilovemithila.com/wp-content/uploads/2025/05/Solid-Security-Pro-formerly-iThemes-Security-Pro.jpg.jpg", note:CATEGORY_NOTES["wp-plugins"] },
+  { id:"ilm-11070", name:"MemberPress Pro 1.12.10 - WP Plugin", category:"wp-plugins", price:299, img:"https://store.ilovemithila.com/wp-content/uploads/2025/05/Integrations-MP-Subscription-Cancellation-Override-1724x970-1.svg", note:CATEGORY_NOTES["wp-plugins"] },
+  { id:"ilm-11078", name:"Rank Math Pro 3.0.100 - SEO Plugin", category:"wp-plugins", price:299, img:"https://store.ilovemithila.com/wp-content/uploads/2025/05/video-thumb-new.jpg", note:CATEGORY_NOTES["wp-plugins"] },
+  { id:"ilm-11092", name:"Yoast SEO Premium 26.3 - SEO Plugin", category:"wp-plugins", price:299, img:"https://store.ilovemithila.com/wp-content/uploads/2025/05/download.png", note:CATEGORY_NOTES["wp-plugins"] },
+  { id:"ilm-11082", name:"All-in-One WP Migration Unlimited 2.80", category:"wp-plugins", price:299, img:"https://store.ilovemithila.com/wp-content/uploads/2025/05/All-In-One-WP-Migration-WordPress-768x432-1.jpg", note:CATEGORY_NOTES["wp-plugins"] },
+  { id:"ilm-11044", name:"Newspaper 12.7.3 - News and WooCommerce WordPress Theme", category:"wp-themes", price:299, img:"https://store.ilovemithila.com/wp-content/uploads/2025/05/Newspaper-Theme-GPL.jpeg", note:CATEGORY_NOTES["wp-themes"] },
+  { id:"ilm-11050", name:"Newsmag 5.4.3.3 - Magazine WordPress Theme", category:"wp-themes", price:299, img:"https://store.ilovemithila.com/wp-content/uploads/2025/05/01.__large_preview.png", note:CATEGORY_NOTES["wp-themes"] },
+  { id:"ilm-10916", name:"Divi 5.0.0 - Site Building Framework For WordPress", category:"wp-themes", price:359, img:"https://store.ilovemithila.com/wp-content/uploads/2025/05/divi-review-688x347-1.jpg", note:CATEGORY_NOTES["wp-themes"] },
+  { id:"ilm-10910", name:"Flatsome 3.20.3 - Multi-Purpose Theme", category:"ecommerce", price:299, img:"https://store.ilovemithila.com/wp-content/uploads/2025/05/Cover-1.__large_preview.jpg", note:CATEGORY_NOTES.ecommerce },
+  { id:"ilm-11435", name:"Free Website Development", category:"web-development", price:21, img:"https://store.ilovemithila.com/wp-content/uploads/2025/08/1_V-Jp13LvtVc2IiY2fp4qYw.jpg", note:CATEGORY_NOTES["web-development"] },
+  { id:"ilm-11436", name:"Nepali News Portal Development", category:"web-development", price:48950, img:"https://store.ilovemithila.com/wp-content/uploads/2025/08/original-cc830f55310acaa02cffc4d60f4c4db9-e1754736157788.webp", note:CATEGORY_NOTES["web-development"] }
+];
+
+function decodeHtmlEntities(value){
+  let s = String(value || "");
+  s = s.replace(/&amp;/g, "&")
+       .replace(/&#038;/g, "&")
+       .replace(/&#8211;/g, "-")
+       .replace(/&#8212;/g, "-")
+       .replace(/&#8217;/g, "'")
+       .replace(/&#8220;/g, "\"")
+       .replace(/&#8221;/g, "\"")
+       .replace(/\u2013/g, "-")
+       .replace(/\u2014/g, "-")
+       .replace(/\u2018/g, "'")
+       .replace(/\u2019/g, "'")
+       .replace(/\u201C/g, "\"")
+       .replace(/\u201D/g, "\"");
+  return s;
+}
+
+function isAscii(value){
+  return /^[\x20-\x7E]*$/.test(String(value || ""));
+}
 async function loadPublicSettings(){
   try{
     const res = await fetch(`${API_BASE}/api/public/settings`);
@@ -46,15 +135,6 @@ async function loadPublicSettings(){
     }
     // If QR already rendered, update it
     document.querySelectorAll(".qrWrap img").forEach(img => { img.src = ESEWA_QR_IMAGE; });
-    const spotifyCategory = { id:"spotify", name:"Spotify", tag:"Premium plans & top-ups", icon:"SP" };
-    if (!categories.some(c => String(c.id) === "spotify")) {
-      categories = categories.concat([spotifyCategory]);
-    }
-
-    const spotifySample = { id:"p9", name:"Spotify Premium (1 Month)", category:"spotify", price:499, img:"assets/product-3.svg", note:"Instant activation" };
-    if (!products.some(p => String(p.category) === "spotify")) {
-      products = products.concat([spotifySample]);
-    }
   }catch(e){
     // silent
   }
@@ -104,21 +184,12 @@ async function loadTestimonials(){
       const meta = `${starsHtml(r.rating)}${when ? `<span class="when">${escapeHtml(when)}</span>` : ""}`;
       return `
         <div class="quote">
-          <p>�${msg}�</p>
-          <div class="who">� ${escapeHtml(who)}</div>
+          <p>"${msg}"</p>
+          <div class="who">- ${escapeHtml(who)}</div>
           ${meta ? `<div class="metaLine">${meta}</div>` : ""}
         </div>
       `;
     }).join("");
-    const spotifyCategory = { id:"spotify", name:"Spotify", tag:"Premium plans & top-ups", icon:"SP" };
-    if (!categories.some(c => String(c.id) === "spotify")) {
-      categories = categories.concat([spotifyCategory]);
-    }
-
-    const spotifySample = { id:"p9", name:"Spotify Premium (1 Month)", category:"spotify", price:499, img:"assets/product-3.svg", note:"Instant activation" };
-    if (!products.some(p => String(p.category) === "spotify")) {
-      products = products.concat([spotifySample]);
-    }
   }catch(e){
     // silent
   }
@@ -126,26 +197,9 @@ async function loadTestimonials(){
 
 const STORE_KEY = "softupakaran_cart_v1";
 
-let categories = [
-  { id:"freefire", name:"Free Fire Top Up", tag:"Top up diamonds instantly", icon:"??" },
-  { id:"pubg", name:"PUBG UC", tag:"UC pins & UID top-up", icon:"??" },
-  { id:"gift", name:"Gift Cards", tag:"Steam, Google Play & more", icon:"??" },
-  { id:"subs", name:"Subscriptions", tag:"Netflix, Spotify, Prime", icon:"?" },
-  { id:"spotify", name:"Spotify", tag:"Premium plans & top-ups", icon:"SP" },
-  { id:"social", name:"Social Media Boost", tag:"Coins, credits & boosts", icon:"??" },
-  { id:"gears", name:"Gaming Gears", tag:"Mice, headsets, keyboards", icon:"???" },
-];
+let categories = DEFAULT_CATEGORIES.slice();
 
-let products = [
-  { id:"p1", name:"Free Fire 530 Diamonds", category:"freefire", price:999, img:"assets/product-2.svg", note:"Direct UID - Instant delivery" },
-  { id:"p2", name:"PUBG UC 600 (Global)", category:"pubg", price:1300, img:"assets/product-1.svg", note:"UID top-up - 5-10 min" },
-  { id:"p3", name:"Google Play Gift Card $10", category:"gift", price:1550, img:"assets/product-5.svg", note:"US region - Digital code" },
-  { id:"p4", name:"Steam Wallet Code $20", category:"gift", price:3100, img:"assets/product-3.svg", note:"Global/US - Instant code" },
-  { id:"p5", name:"Netflix Premium (1 Month)", category:"subs", price:1299, img:"assets/product-4.svg", note:"Shared profile - 4K" },
-  { id:"p6", name:"Spotify Premium (3 Months)", category:"spotify", price:1199, img:"assets/product-3.svg", note:"Activation within 1 hour" },
-  { id:"p7", name:"TikTok Coins 350", category:"social", price:650, img:"assets/product-7.svg", note:"Nepal payment - Quick delivery" },
-  { id:"p8", name:"Gaming Mouse RGB (Budget)", category:"gears", price:1499, img:"assets/product-8.svg", note:"2-year warranty - DPI 6400" },
-];
+let products = DEFAULT_PRODUCTS.slice();
 
 function formatNPR(n){
   // simple format: Rs. 1,234
@@ -269,9 +323,9 @@ function getParam(name){
 function renderCategoryPage(){
   const root = document.querySelector("[data-category-products]");
   if(!root) return;
-  const id = getParam("c") || "gift";
+  const id = getParam("c") || "subscriptions";
   const cat = categories.find(x => x.id === id);
-  document.title = `${cat ? cat.name : "Category"} � SoftUpakaran`;
+  document.title = `${cat ? cat.name : "Category"} - SoftUpakaran`;
   const header = document.querySelector("[data-category-title]");
   if(header) header.textContent = cat ? cat.name : "Category";
   const filtered = products.filter(p => p.category === id);
@@ -289,7 +343,15 @@ function renderProductPage(){
   if(!root) return;
   const id = getParam("id") || "p1";
   const p = products.find(x => x.id === id) || products[0];
-  document.title = `${p.name} � SoftUpakaran`;
+  if(!p){
+    root.innerHTML = `
+      <div class="card"><div class="pad">
+        <p class="cardTitle">Product not found</p>
+        <p class="cardMeta">Please go back and select another item.</p>
+      </div></div>`;
+    return;
+  }
+  document.title = `${p.name} - SoftUpakaran`;
   root.innerHTML = `
     <div class="heroGrid">
       <div class="heroCard">
@@ -301,10 +363,10 @@ function renderProductPage(){
         <div class="inner">
           <div class="kicker">Digital Delivery</div>
           <div class="h1" style="margin-top:10px">${p.name}</div>
-          <p class="sub">${p.note}. Replace the text with your exact instructions (UID, region restrictions, etc.).</p>
+          <p class="sub">${p.note}. After payment, share your account email/ID or site URL on WhatsApp. We deliver within 5-30 minutes.</p>
           <div style="margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
             <div class="badge">${formatNPR(p.price)}</div>
-            <div class="small">Secure checkout � Support chat</div>
+            <div class="small">Secure checkout - Support chat</div>
           </div>
           <div class="heroActions">
             <button class="btn primary" id="buyNow">Add to cart</button>
@@ -313,7 +375,7 @@ function renderProductPage(){
           <div style="margin-top:18px">
             <div class="feature">
               <h3>Steps</h3>
-              <p>1) Select denomination � 2) Enter Player ID � 3) Pay � 4) Get delivery</p>
+              <p>1) Choose plan - 2) Share details - 3) Pay - 4) Get delivery</p>
             </div>
           </div>
         </div>
@@ -360,7 +422,7 @@ function renderCart(){
       <p class="cardTitle">Your cart is empty</p>
       <p class="cardMeta">Add some products to continue.</p>
     </div></div>`;
-    footer.innerHTML = `<div class="notice">Tip: click �Add� on any product.</div>
+    footer.innerHTML = `<div class="notice">Tip: click Add on any product.</div>
       <button class="btn primary" data-cart-close>Continue shopping</button>`;
     footer.querySelector("[data-cart-close]")?.addEventListener("click", closeCart);
     updateCartCount();
@@ -372,7 +434,7 @@ function renderCart(){
       <img src="${l.img}" alt="${l.name}">
       <div>
         <p class="name">${l.name}</p>
-        <p class="desc">${formatNPR(l.price)} � ${l.note}</p>
+        <p class="desc">${formatNPR(l.price)} - ${l.note}</p>
       </div>
       <div class="qty">
         <button aria-label="Decrease" data-dec="${l.id}">-</button>
@@ -501,7 +563,7 @@ async function sendOrderToBackend(extraNote){
 function buildWhatsAppMessage(){
   const lines = cartLines();
   const total = cartTotal();
-  const items = lines.map(l => `� ${l.name} x${l.qty} = ${formatNPR(l.lineTotal)}`).join("\n");
+  const items = lines.map(l => `- ${l.name} x${l.qty} = ${formatNPR(l.lineTotal)}`).join("\\n");
   return `Hello SoftUpakaran,\n\nI want to order:\n${items}\n\nTotal: ${formatNPR(total)}\n\nPlease guide me for payment & delivery.`;
 }
 
@@ -588,6 +650,7 @@ function wirePayModal(){
 
 
 async function loadCatalogFromApi(){
+  let didLoadProducts = false;
   try{
     const [catsRes, prodsRes] = await Promise.all([
       fetch(`${API_BASE}/api/categories`),
@@ -596,7 +659,9 @@ async function loadCatalogFromApi(){
 
     if (catsRes.ok){
       const cats = await catsRes.json();
-      if(Array.isArray(cats) && cats.length) categories = cats;
+      if(Array.isArray(cats) && cats.length){
+        categories = cats;
+      }
     }
 
     if (prodsRes.ok){
@@ -610,24 +675,85 @@ async function loadCatalogFromApi(){
           img: r.image || "assets/product-1.svg",
           note: r.note || "Instant delivery"
         }));
+        didLoadProducts = true;
       }
-    }
-    const spotifyCategory = { id:"spotify", name:"Spotify", tag:"Premium plans & top-ups", icon:"SP" };
-    if (!categories.some(c => String(c.id) === "spotify")) {
-      categories = categories.concat([spotifyCategory]);
-    }
-
-    const spotifySample = { id:"p9", name:"Spotify Premium (1 Month)", category:"spotify", price:499, img:"assets/product-3.svg", note:"Instant activation" };
-    if (!products.some(p => String(p.category) === "spotify")) {
-      products = products.concat([spotifySample]);
     }
   }catch(e){
     // fallback to static arrays
   }
+  return didLoadProducts;
 }
+
+async function loadCatalogFromIlmStore(){
+  try{
+    const [catsRes, prodsRes] = await Promise.all([
+      fetch(`${ILM_STORE_API}/products/categories?per_page=100`),
+      fetch(`${ILM_STORE_API}/products?per_page=100&_fields=id,name,prices,images,categories`)
+    ]);
+
+    if (!catsRes.ok || !prodsRes.ok) return false;
+
+    const rawCats = await catsRes.json();
+    const rawProds = await prodsRes.json();
+    const byId = {};
+
+    DEFAULT_CATEGORIES.forEach(c => { byId[c.id] = { ...c }; });
+
+    if(Array.isArray(rawCats)){
+      rawCats.forEach(c => {
+        const mappedId = ILM_CATEGORY_SLUG_MAP[c.slug];
+        if(!mappedId || !byId[mappedId]) return;
+        const decodedName = decodeHtmlEntities(c.name);
+        if(decodedName && isAscii(decodedName)) byId[mappedId].name = decodedName.trim();
+        if(c.description){
+          const desc = decodeHtmlEntities(c.description).replace(/\s+/g, " ").trim();
+          if(desc && isAscii(desc)) byId[mappedId].tag = desc;
+        }
+      });
+    }
+
+    categories = CATEGORY_ORDER.map(id => byId[id]).filter(Boolean);
+
+    if(Array.isArray(rawProds) && rawProds.length){
+      products = rawProds.map(p => {
+        const catSlug = (p.categories && p.categories[0]) ? p.categories[0].slug : "subscription";
+        let categoryId = ILM_CATEGORY_SLUG_MAP[catSlug] || "subscriptions";
+        const decodedName = decodeHtmlEntities(p.name);
+        if (/netflix/i.test(decodedName)) categoryId = "netflix";
+        const priceMinor = Number(p.prices && p.prices.price) || 0;
+        const price = Math.round(priceMinor / 100);
+        return {
+          id: `ilm-${p.id}`,
+          name: decodedName,
+          category: categoryId,
+          price: price,
+          img: (p.images && p.images[0] && p.images[0].src) ? p.images[0].src : "assets/product-1.svg",
+          note: CATEGORY_NOTES[categoryId] || "Instant delivery"
+        };
+      });
+    }
+    return true;
+  }catch(e){
+    return false;
+  }
+}
+
 async function init(){
+  renderCategories();
+  renderPopular();
+  renderCategoryPage();
+  renderProductPage();
   await loadPublicSettings();
-  await loadCatalogFromApi();
+  const loaded = await loadCatalogFromApi();
+  if(!loaded){
+    await loadCatalogFromIlmStore();
+  }
+  if(!Array.isArray(categories) || !categories.length){
+    categories = DEFAULT_CATEGORIES.slice();
+  }
+  if(!Array.isArray(products) || !products.length){
+    products = DEFAULT_PRODUCTS.slice();
+  }
   await loadTestimonials();
   updateCartCount();
   renderCategories();
@@ -638,7 +764,6 @@ async function init(){
   wirePayModal();
   wireCartButtons();
   wireSearch();
-  loadTestimonials();
 
   // pills dynamic
   const pills = document.querySelector("[data-pills]");
@@ -708,7 +833,7 @@ function mountFeedback(){
     <div class="feedbackCard">
       <div class="feedbackHeader">
         <div class="feedbackTitle">Share your feedback</div>
-        <button class="feedbackClose" aria-label="Close">�</button>
+        <button class="feedbackClose" aria-label="Close">x</button>
       </div>
       <div class="feedbackForm" role="form">
         <label>Rating</label>
@@ -774,6 +899,15 @@ document.addEventListener("DOMContentLoaded", () => {
   try{ mountFeedback(); }catch(e){ console.warn("Feedback widget failed:", e); }
 });
 /* === end Feedback Widget === */
+
+
+
+
+
+
+
+
+
 
 
 
