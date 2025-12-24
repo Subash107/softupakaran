@@ -64,11 +64,13 @@
   align-items: flex-end;
   gap: 10px;
   z-index: 60;
+  pointer-events: none;
 }
 .floatingSupport .chatFab,
 .floatingSupport .feedbackButton{
   width: max-content;
   white-space: nowrap;
+  pointer-events: auto;
 }
 .chatFab{
   background: linear-gradient(135deg, #16a34a, #22d3ee);
@@ -87,6 +89,20 @@
   transition: transform .12s ease;
 }
 .chatFab:hover{ transform: translateY(-2px); }
+
+@media (max-width: 640px){
+  .floatingSupport{
+    right: 0;
+    left: 0;
+    padding: 0 12px;
+    bottom: 12px;
+    align-items: center;
+  }
+  .floatingSupport .chatFab,
+  .floatingSupport .feedbackButton{
+    width: min(92vw, 320px);
+  }
+}
 
 /* === Floating micro-animation for header boxes === */
 @keyframes floatY {
