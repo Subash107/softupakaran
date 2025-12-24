@@ -788,16 +788,7 @@ body.home .feature::before{
     gap:10px;
   }
   .topbar .navlinks{
-    width:100%;
-    justify-content:flex-start;
-    flex-wrap:wrap;
-    gap:6px;
-  }
-  .topbar .navlinks .btn{ padding: 8px 10px; }
-  .topbar .brand .brand-badge{ display:none; }
-  .topbar .navlinks .nav-badge{
-    display:inline-flex;
-    margin-left:auto;
+    display:none;
   }
   .topbar .navlinks .google-nav-btn{ display:inline-flex; }
 }
