@@ -94,33 +94,7 @@ const DEFAULT_CATEGORIES = [
   { id:"web-development", name:"Web Development", tag:"Custom website builds", icon:"WEB" }
 ];
 
-const DEFAULT_PRODUCTS = [
-  { id:"ilm-12291", name:"Cheapest Netflix Subscription", category:"netflix", price:180, img:"https://store.ilovemithila.com/wp-content/uploads/2025/12/netflix-in-nepal.jpg", note:CATEGORY_NOTES.netflix },
-  { id:"ilm-12260", name:"Canva Pro in Nepal", category:"subscriptions", price:99, img:"https://store.ilovemithila.com/wp-content/uploads/2025/11/canva-nepal.jpg", note:CATEGORY_NOTES.subscriptions },
-  { id:"ilm-12259", name:"Windows 11 Pro Key in Nepal", category:"subscriptions", price:1599, img:"https://store.ilovemithila.com/wp-content/uploads/2025/10/windows-11-pro-retail-key-500x500-1.webp", note:CATEGORY_NOTES.subscriptions },
-  { id:"ilm-12253", name:"Google AI Ultra in Nepal", category:"subscriptions", price:1500, img:"https://store.ilovemithila.com/wp-content/uploads/2025/10/GoogleAIUltra_SS_1920x1080.width-1300.png", note:CATEGORY_NOTES.subscriptions },
-  { id:"ilm-12213", name:"ChatGPT Premium in Nepal", category:"subscriptions", price:299, img:"https://store.ilovemithila.com/wp-content/uploads/2025/08/chatgpt-1.jpg", note:CATEGORY_NOTES.subscriptions },
-  { id:"ilm-10960", name:"Google One (AI Pro) in Nepal", category:"subscriptions", price:1200, img:"https://store.ilovemithila.com/wp-content/uploads/2025/07/subs-1.png", note:CATEGORY_NOTES.subscriptions },
-  { id:"ilm-11480", name:"IP Vanish - 1 Year VPN in Nepal", category:"vpn", price:599, img:"https://store.ilovemithila.com/wp-content/uploads/2025/09/ipvanish-400x225-usjc.webp", note:CATEGORY_NOTES.vpn },
-  { id:"ilm-12240", name:"Hostiko 94.3.4 - Hosting WordPress and WHMCS Theme", category:"wp-themes", price:350, img:"https://store.ilovemithila.com/wp-content/uploads/2025/11/hostiko-wordpress-theme.jpg", note:CATEGORY_NOTES["wp-themes"] },
-  { id:"ilm-12102", name:"KiviCare 2.2.14 - Clinic and Patient Management", category:"wp-themes", price:350, img:"https://store.ilovemithila.com/wp-content/uploads/2025/09/kivi.png", note:CATEGORY_NOTES["wp-themes"] },
-  { id:"ilm-11226", name:"WP Rocket 3.20.1.1 - WordPress Caching Plugin", category:"wp-plugins", price:299, img:"https://store.ilovemithila.com/wp-content/uploads/2025/05/wp-rocket-nasil-kurulur.jpg.webp", note:CATEGORY_NOTES["wp-plugins"] },
-  { id:"ilm-12108", name:"Dokan Pro 4.1.3 - Multivendor Marketplace Plugin", category:"wp-plugins", price:299, img:"https://store.ilovemithila.com/wp-content/uploads/2025/09/Dokan-Pro-Multivendor-Marketplace-Plugin-for-WordPress.jpg.jpg", note:CATEGORY_NOTES["wp-plugins"] },
-  { id:"ilm-11499", name:"Search and Filter Pro 3.1.8 - WP Plugin", category:"wp-plugins", price:299, img:"https://store.ilovemithila.com/wp-content/uploads/2025/08/Search-Filter-Pro-Search-and-Filtering-for-WordPress.jpg", note:CATEGORY_NOTES["wp-plugins"] },
-  { id:"ilm-10907", name:"Elementor Pro 3.33.2 - Page Builder", category:"wp-plugins", price:299, img:"https://store.ilovemithila.com/wp-content/uploads/2025/05/Elementor_Pro_Package_cleanup.png", note:CATEGORY_NOTES["wp-plugins"] },
-  { id:"ilm-11020", name:"W3 Total Cache Pro 2.8.14 - WordPress Cache Plugin", category:"wp-plugins", price:299, img:"https://store.ilovemithila.com/wp-content/uploads/2025/05/w3-cache-.jpg", note:CATEGORY_NOTES["wp-plugins"] },
-  { id:"ilm-11035", name:"Solid Security Pro 8.6.3 - WP Plugin", category:"wp-plugins", price:299, img:"https://store.ilovemithila.com/wp-content/uploads/2025/05/Solid-Security-Pro-formerly-iThemes-Security-Pro.jpg.jpg", note:CATEGORY_NOTES["wp-plugins"] },
-  { id:"ilm-11070", name:"MemberPress Pro 1.12.10 - WP Plugin", category:"wp-plugins", price:299, img:"https://store.ilovemithila.com/wp-content/uploads/2025/05/Integrations-MP-Subscription-Cancellation-Override-1724x970-1.svg", note:CATEGORY_NOTES["wp-plugins"] },
-  { id:"ilm-11078", name:"Rank Math Pro 3.0.100 - SEO Plugin", category:"wp-plugins", price:299, img:"https://store.ilovemithila.com/wp-content/uploads/2025/05/video-thumb-new.jpg", note:CATEGORY_NOTES["wp-plugins"] },
-  { id:"ilm-11092", name:"Yoast SEO Premium 26.3 - SEO Plugin", category:"wp-plugins", price:299, img:"https://store.ilovemithila.com/wp-content/uploads/2025/05/download.png", note:CATEGORY_NOTES["wp-plugins"] },
-  { id:"ilm-11082", name:"All-in-One WP Migration Unlimited 2.80", category:"wp-plugins", price:299, img:"https://store.ilovemithila.com/wp-content/uploads/2025/05/All-In-One-WP-Migration-WordPress-768x432-1.jpg", note:CATEGORY_NOTES["wp-plugins"] },
-  { id:"ilm-11044", name:"Newspaper 12.7.3 - News and WooCommerce WordPress Theme", category:"wp-themes", price:299, img:"https://store.ilovemithila.com/wp-content/uploads/2025/05/Newspaper-Theme-GPL.jpeg", note:CATEGORY_NOTES["wp-themes"] },
-  { id:"ilm-11050", name:"Newsmag 5.4.3.3 - Magazine WordPress Theme", category:"wp-themes", price:299, img:"https://store.ilovemithila.com/wp-content/uploads/2025/05/01.__large_preview.png", note:CATEGORY_NOTES["wp-themes"] },
-  { id:"ilm-10916", name:"Divi 5.0.0 - Site Building Framework For WordPress", category:"wp-themes", price:359, img:"https://store.ilovemithila.com/wp-content/uploads/2025/05/divi-review-688x347-1.jpg", note:CATEGORY_NOTES["wp-themes"] },
-  { id:"ilm-10910", name:"Flatsome 3.20.3 - Multi-Purpose Theme", category:"ecommerce", price:299, img:"https://store.ilovemithila.com/wp-content/uploads/2025/05/Cover-1.__large_preview.jpg", note:CATEGORY_NOTES.ecommerce },
-  { id:"ilm-11435", name:"Free Website Development", category:"web-development", price:21, img:"https://store.ilovemithila.com/wp-content/uploads/2025/08/1_V-Jp13LvtVc2IiY2fp4qYw.jpg", note:CATEGORY_NOTES["web-development"] },
-  { id:"ilm-11436", name:"Nepali News Portal Development", category:"web-development", price:48950, img:"https://store.ilovemithila.com/wp-content/uploads/2025/08/original-cc830f55310acaa02cffc4d60f4c4db9-e1754736157788.webp", note:CATEGORY_NOTES["web-development"] }
-];
+const DEFAULT_PRODUCTS = [];
 
 const LAZY_IMAGE_PLACEHOLDER = "assets/product-1.svg";
 const LAZY_IMAGE_MARGIN = "140px";
