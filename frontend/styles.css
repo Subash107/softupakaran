@@ -882,6 +882,16 @@ body.home .feature::before{
   to{ opacity:1; }
 }
 
+@media (max-width: 720px){
+  body.home .heroSlider{
+    width: calc(100% + 32px);
+    margin: 16px -16px 24px;
+  }
+  .heroSlider .heroText{
+    padding: 24px;
+  }
+}
+
 .heroDots{
   position:absolute;
   bottom:14px;
