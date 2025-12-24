@@ -1,4 +1,4 @@
-﻿require("dotenv").config();
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
@@ -253,9 +253,9 @@ async function ensureAdminUser() {
       ["Admin", email, hash]
     );
 
-    console.log("ðŸ‘¤ Admin user ready:", email);
+    console.log("👤 Admin user ready:", email);
   } catch (err) {
-    console.error("âŒ Failed to ensure admin user:", err.message);
+    console.error("❌ Failed to ensure admin user:", err.message);
   }
 }
 ensureAdminUser();
@@ -426,6 +426,33 @@ app.post("/api/admin/settings/esewa-qr", adminRequired, upload.single("qr"), asy
   }
 });
 
+// ---------- public proxy: ilovemithila store (avoid CORS issues) ----------
+async function proxyIlm(req, res, path) {
+  const url = `https://store.ilovemithila.com/wp-json/wc/store${path}`;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
+  try {
+    const r = await fetch(url, {
+      signal: controller.signal,
+      headers: { "Accept": "application/json" },
+    });
+    const text = await r.text();
+    res.status(r.status).type(r.headers.get("content-type") || "application/json").send(text);
+  } catch (err) {
+    res.status(502).json({ error: "ILM proxy failed", detail: err.message });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+app.get("/api/public/ilm/categories", (req, res) => {
+  proxyIlm(req, res, "/products/categories?per_page=100");
+});
+
+app.get("/api/public/ilm/products", (req, res) => {
+  proxyIlm(req, res, "/products?per_page=100&_fields=id,name,prices,images,categories");
+});
+
 // ---------- admin: backups ----------
 app.post("/api/admin/backup", backupAuth, async (_req, res) => {
   try {
@@ -435,6 +462,15 @@ app.post("/api/admin/backup", backupAuth, async (_req, res) => {
   } catch (err) {
     res.status(500).json({ error: "Backup failed", detail: err.message });
   }
+});
+
+app.get("/api/admin/backup/download", backupAuth, (_req, res) => {
+  if (!fs.existsSync(dbPath)) return res.status(404).json({ error: "Database file not found" });
+  res.download(dbPath, "softupakaran-backup.db", (err) => {
+    if (err && !res.headersSent) {
+      res.status(500).json({ error: "Backup download failed" });
+    }
+  });
 });
 
 // ---------- feedback ----------
@@ -970,4 +1006,6 @@ app.post("/api/auth/google", async (req, res) => {
 app.listen(PORT, () => {
   console.log("dYs? SoftUpakaran API running on http://localhost:" + PORT);
 });
+
+
 

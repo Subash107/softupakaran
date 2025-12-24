@@ -34,7 +34,8 @@ let WHATSAPP_NUMBER = "9779800000000";
 let ESEWA_QR_IMAGE = "assets/esewa-qr-placeholder.svg";
 
 const API_BASE = (localStorage.getItem("SPK_API_BASE") || window.API_BASE || "").trim().replace(/\/$/, "");
-const ILM_STORE_API = "https://store.ilovemithila.com/wp-json/wc/store";
+  const ILM_STORE_API = "https://store.ilovemithila.com/wp-json/wc/store";
+  const ILM_PROXY_BASE = API_BASE ? `${API_BASE}/api/public/ilm` : "";
 
 const CATEGORY_ORDER = [
   "subscriptions",
@@ -684,17 +685,36 @@ async function loadCatalogFromApi(){
   return didLoadProducts;
 }
 
-async function loadCatalogFromIlmStore(){
-  try{
-    const [catsRes, prodsRes] = await Promise.all([
-      fetch(`${ILM_STORE_API}/products/categories?per_page=100`),
-      fetch(`${ILM_STORE_API}/products?per_page=100&_fields=id,name,prices,images,categories`)
-    ]);
+  async function loadCatalogFromIlmStore(){
+    async function tryBase(base){
+      const [catsRes, prodsRes] = await Promise.all([
+        fetch(`${base}/products/categories?per_page=100`),
+        fetch(`${base}/products?per_page=100&_fields=id,name,prices,images,categories`)
+      ]);
+      if (!catsRes.ok || !prodsRes.ok) return null;
+      const rawCats = await catsRes.json();
+      const rawProds = await prodsRes.json();
+      return { rawCats, rawProds };
+    }
 
-    if (!catsRes.ok || !prodsRes.ok) return false;
+    const bases = [];
+    if (ILM_PROXY_BASE) bases.push(ILM_PROXY_BASE);
+    bases.push(ILM_STORE_API);
 
-    const rawCats = await catsRes.json();
-    const rawProds = await prodsRes.json();
+    try{
+      let payload = null;
+      for (const base of bases){
+        try {
+          payload = await tryBase(base);
+          if (payload) break;
+        } catch (_) {
+          // try next base
+        }
+      }
+      if (!payload) return false;
+
+      const rawCats = payload.rawCats;
+      const rawProds = payload.rawProds;
     const byId = {};
 
     DEFAULT_CATEGORIES.forEach(c => { byId[c.id] = { ...c }; });
