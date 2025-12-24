@@ -410,9 +410,12 @@ function renderProductPage(){
   if(!p){
     root.innerHTML = `
       <div class="card"><div class="pad">
-        <p class="cardTitle">Product not found</p>
-        <p class="cardMeta">Please go back and select another item.</p>
+        <p class="cardTitle">Loading product...</p>
+        <p class="cardMeta">Fetching details from the catalog.</p>
       </div></div>`;
+    loadProductById(id).then((result) => {
+      if(result) renderProductPage();
+    });
     return;
   }
   document.title = `${p.name} - SoftUpakaran`;
@@ -448,6 +451,49 @@ function renderProductPage(){
   `;
   $("#buyNow")?.addEventListener("click", () => { addToCart(p.id, 1); openCart(); });
   ensureVisible(root);
+}
+
+const backendProductCache = new Map();
+
+function transformBackendProduct(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    name: row.name,
+    category: row.category_id,
+    price: row.price_npr,
+    img: row.image || "assets/product-1.svg",
+    note: row.note || "Instant delivery"
+  };
+}
+
+async function loadProductById(id) {
+  if (!id || !API_BASE) return null;
+  if (backendProductCache.has(id)) return backendProductCache.get(id);
+
+  const promise = (async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/products/${encodeURIComponent(id)}`);
+      if (!res.ok) return null;
+      const row = await res.json();
+      const product = transformBackendProduct(row);
+      if (!product) return null;
+      const existing = products.findIndex((p) => p.id === product.id);
+      if (existing >= 0) {
+        products[existing] = product;
+      } else {
+        products.push(product);
+      }
+      return product;
+    } catch (_) {
+      return null;
+    } finally {
+      backendProductCache.delete(id);
+    }
+  })();
+
+  backendProductCache.set(id, promise);
+  return promise;
 }
 
 function buildCartModal(){
@@ -733,18 +779,11 @@ async function loadCatalogFromApi(){
 
     if (prodsRes.ok){
       const rows = await prodsRes.json();
-      if(Array.isArray(rows) && rows.length){
-        products = rows.map(r => ({
-          id: r.id,
-          name: r.name,
-          category: r.category_id,
-          price: r.price_npr,
-          img: r.image || "assets/product-1.svg",
-          note: r.note || "Instant delivery"
-        }));
-        didLoadProducts = true;
-      }
+    if(Array.isArray(rows) && rows.length){
+      products = rows.map(transformBackendProduct);
+      didLoadProducts = true;
     }
+  }
   }catch(e){
     // fallback to static arrays
   }
