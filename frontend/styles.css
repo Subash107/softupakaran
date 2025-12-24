@@ -897,8 +897,11 @@ body.home .feature::before{
   bottom:14px;
   left:50%;
   transform:translateX(-50%);
-  display:flex;
+  display:none;
   gap:8px;
+}
+body.home .heroDots{
+  display:flex;
 }
 .heroDot{
   width:10px;height:10px;border-radius:50%;
