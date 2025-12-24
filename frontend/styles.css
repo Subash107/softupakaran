@@ -608,6 +608,19 @@ body.home .feature::before{
 }
 .curatedFallback{
   display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 14px;
+}
+.curatedFallback .card{
+  margin:0;
+  width:100%;
+}
+.chatFab{
+  right: 20px;
+  bottom: 24px;
+}
+.curatedFallback{
+  display:grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 12px;
 }
