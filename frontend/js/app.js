@@ -393,7 +393,7 @@ function renderProductPage(){
     return;
   }
   document.title = `${p.name} - SoftUpakaran`;
-  root.innerHTML = `
+  const heroContent = `
     <div class="heroGrid">
       <div class="heroCard">
         <div class="thumb" style="aspect-ratio: 16/11">
@@ -423,8 +423,41 @@ function renderProductPage(){
       </div>
     </div>
   `;
+  root.innerHTML = heroContent + renderRelatedSection(p);
   $("#buyNow")?.addEventListener("click", () => { addToCart(p.id, 1); openCart(); });
   ensureVisible(root);
+  initLazyImages(root);
+}
+
+function relatedCard(p){
+  return `
+    <a class="related-card" href="product.html?id=${encodeURIComponent(p.id)}">
+      <div class="thumb">
+        ${lazyImage(p.img, p.name)}
+      </div>
+      <p class="title">${escapeHtml(p.name)}</p>
+      <p class="price">${formatNPR(p.price)}</p>
+    </a>
+  `;
+}
+
+function renderRelatedSection(current){
+  if(!current) return "";
+  const related = products
+    .filter(p => p.category === current.category && p.id !== current.id)
+    .slice(0, 4);
+  if(!related.length) return "";
+  return `
+    <section class="related-section">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+        <h3>You may also like</h3>
+        <a class="btn icon" href="category.html?c=${encodeURIComponent(current.category)}">View category</a>
+      </div>
+      <div class="related-grid">
+        ${related.map(relatedCard).join("")}
+      </div>
+    </section>
+  `;
 }
 
 const backendProductCache = new Map();
@@ -598,20 +631,118 @@ function wireCartButtons(){
 
 function wireSearch(){
   const input = document.querySelector("[data-search]");
+  const dropdown = document.querySelector("[data-search-dropdown]");
   if(!input) return;
-  input.addEventListener("input", () => {
+  let suggestions = [];
+  let activeIndex = -1;
+  let blurTimer = null;
+  const root = document.querySelector("[data-popular]");
+
+  const hideDropdown = () => {
+    if(!dropdown) return;
+    dropdown.classList.remove("visible");
+    activeIndex = -1;
+  };
+
+  const setActive = (index) => {
+    if(index < 0) index = -1;
+    if(!dropdown) return;
+    activeIndex = index;
+    const buttons = dropdown.querySelectorAll(".search-dropdown-item");
+    buttons.forEach((btn, i) => btn.classList.toggle("active", i === index));
+  };
+
+  const renderDropdown = (items, query) => {
+    if(!dropdown) return;
+    if(!query){
+      dropdown.innerHTML = "";
+      hideDropdown();
+      return;
+    }
+    if(!items.length){
+      dropdown.innerHTML = `<div class="search-dropdown-empty">No results for "${escapeHtml(query)}"</div>`;
+      dropdown.classList.add("visible");
+      suggestions = [];
+      activeIndex = -1;
+      return;
+    }
+    suggestions = items;
+    activeIndex = -1;
+    dropdown.innerHTML = items.map((p, idx) => `
+      <button type="button" class="search-dropdown-item" data-search-id="${encodeURIComponent(p.id)}" data-search-index="${idx}">
+        <span>${escapeHtml(p.name)}</span>
+        <small>${formatNPR(p.price)}</small>
+      </button>
+    `).join("");
+    dropdown.classList.add("visible");
+  };
+
+  const updateResults = () => {
     const q = input.value.trim().toLowerCase();
-    const root = document.querySelector("[data-popular]");
     if(!root) return;
-    const items = products.filter(p => p.name.toLowerCase().includes(q)).slice(0,8);
-    root.innerHTML = items.length ? items.map(productCard).join("") : `
+    const filtered = q ? products.filter(p => p.name.toLowerCase().includes(q)) : [];
+    const gridItems = filtered.slice(0, 8);
+    root.innerHTML = gridItems.length ? gridItems.map(productCard).join("") : `
       <div class="card" style="grid-column:1/-1"><div class="pad">
         <p class="cardTitle">No matches</p>
         <p class="cardMeta">Try a different keyword.</p>
       </div></div>
     `;
     wireAddButtons(root);
-  ensureVisible(root);
+    ensureVisible(root);
+    renderDropdown(filtered.slice(0, 6), q);
+  };
+
+  input.addEventListener("input", updateResults);
+  input.addEventListener("focus", () => {
+    if(blurTimer) { clearTimeout(blurTimer); blurTimer = null; }
+    if(suggestions.length && dropdown){
+      dropdown.classList.add("visible");
+    }
+  });
+  input.addEventListener("blur", () => {
+    blurTimer = setTimeout(() => hideDropdown(), 180);
+  });
+
+  input.addEventListener("keydown", (e) => {
+    if(!dropdown || !dropdown.classList.contains("visible") || !suggestions.length) return;
+    if(e.key === "ArrowDown"){
+      e.preventDefault();
+      setActive((activeIndex + 1) % suggestions.length);
+    } else if(e.key === "ArrowUp"){
+      e.preventDefault();
+      setActive((activeIndex + suggestions.length - 1) % suggestions.length);
+    } else if(e.key === "Enter"){
+      if(activeIndex >= 0 && activeIndex < suggestions.length){
+        e.preventDefault();
+        const target = suggestions[activeIndex];
+        if(target){
+          window.location.href = `product.html?id=${encodeURIComponent(target.id)}`;
+        }
+      }
+    } else if(e.key === "Escape"){
+      hideDropdown();
+    }
+  });
+
+  document.addEventListener("click", (e) => {
+    if(!dropdown) return;
+    if(!e.target.closest(".search")){
+      hideDropdown();
+    }
+  });
+
+  dropdown?.addEventListener("mousedown", (e) => {
+    e.preventDefault();
+  });
+  dropdown?.addEventListener("click", (e) => {
+    const btn = (e.target.closest ? e.target.closest("[data-search-id]") : null);
+    if(btn){
+      const id = btn.getAttribute("data-search-id");
+      if(id){
+        window.location.href = `product.html?id=${encodeURIComponent(id)}`;
+      }
+    }
   });
 }
 
