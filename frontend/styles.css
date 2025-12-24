@@ -412,6 +412,19 @@ a{ color:inherit; text-decoration:none; }
   font-weight: 600;
   font-size: 13px;
 }
+.mobileIconBtn{
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 16px;
+  font-weight: 700;
+  justify-content: center;
+}
+.mobileIconBtn svg{
+  width: 20px;
+  height: 20px;
+}
 .btn{
   display:inline-flex; align-items:center; justify-content:center; gap:10px;
   padding: 10px 14px;
