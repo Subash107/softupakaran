@@ -1113,7 +1113,7 @@ function mountFeedback(){
   const btn = document.createElement("button");
   btn.className = "feedbackButton";
   btn.setAttribute("type","button");
-  btn.innerHTML = "?? Feedback";
+  btn.innerHTML = "Feedback";
   const floatingSupport = document.querySelector("[data-floating-actions]");
   (floatingSupport || document.body).appendChild(btn);
 
