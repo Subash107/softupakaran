@@ -605,6 +605,7 @@ body.home .feature::before{
 }
 .curated .grid{
   min-height: 220px;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
 }
 .curatedFallback{
   display:grid;
