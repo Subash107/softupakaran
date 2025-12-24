@@ -96,6 +96,18 @@ const DEFAULT_CATEGORIES = [
 
 const DEFAULT_PRODUCTS = [];
 
+const SAMPLE_SUBSCRIPTIONS = [
+  { id: "sample-netflix", name: "Netflix Premium (1 Month)", category: "netflix", price: 1299, img: "https://store.ilovemithila.com/wp-content/uploads/2025/12/netflix-in-nepal.jpg", note: "Shared profile - 4K" },
+  { id: "sample-chatgpt", name: "ChatGPT Plus (1 Month)", category: "subscriptions", price: 1199, img: "https://store.ilovemithila.com/wp-content/uploads/2025/08/chatgpt-1.jpg", note: "AI + prompts" },
+  { id: "sample-google-play", name: "Google Play $10 Card", category: "subscriptions", price: 1550, img: "https://store.ilovemithila.com/wp-content/uploads/2025/11/canva-nepal.jpg", note: "US region - digital code" }
+];
+
+const SAMPLE_TOOLS = [
+  { id: "sample-wprocket", name: "WP Rocket 3.20", category: "wp-plugins", price: 299, img: "https://store.ilovemithila.com/wp-content/uploads/2025/05/wp-rocket-nasil-kurulur.jpg.webp", note: "Cache + SEO" },
+  { id: "sample-divi", name: "Divi 5.0 Theme", category: "wp-themes", price: 359, img: "https://store.ilovemithila.com/wp-content/uploads/2025/05/divi-review-688x347-1.jpg", note: "Drag & drop builder" },
+  { id: "sample-elementor", name: "Elementor Pro", category: "wp-plugins", price: 299, img: "https://store.ilovemithila.com/wp-content/uploads/2025/05/Elementor_Pro_Package_cleanup.png", note: "Visual page builder" }
+];
+
 const LAZY_IMAGE_PLACEHOLDER = "assets/product-1.svg";
 const LAZY_IMAGE_MARGIN = "140px";
 
@@ -349,11 +361,13 @@ const CURATED_CONFIG = [
     attr: "subscriptions",
     categories: ["subscriptions", "netflix"],
     fallback: "More subscriptions arriving soon.",
+    sample: SAMPLE_SUBSCRIPTIONS,
   },
   {
     attr: "wp-plugins",
     categories: ["wp-plugins", "wp-themes"],
     fallback: "More tools and themes loading shortly.",
+    sample: SAMPLE_TOOLS,
   },
 ];
 
@@ -375,6 +389,12 @@ function renderCuratedSections(){
           </div>
         </div>
       `;
+      if(cfg.sample){
+        const sampleGrid = cfg.sample.map(productCard).join("");
+        root.innerHTML = `<div class="curatedFallback">${sampleGrid}</div>`;
+        wireAddButtons(root);
+        ensureVisible(root);
+      }
     }
   });
 }

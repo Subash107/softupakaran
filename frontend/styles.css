@@ -606,6 +606,11 @@ body.home .feature::before{
 .curated .grid{
   min-height: 220px;
 }
+.curatedFallback{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
 .search-dropdown{
   position:absolute;
   top: calc(100% + 6px);
