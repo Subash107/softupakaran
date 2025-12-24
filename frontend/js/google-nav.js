@@ -75,12 +75,21 @@
       nav.appendChild(holder);
     }
 
-    if (isLoggedIn()) {
-      holder.classList.add('user-chip');
-      holder.innerHTML = '<a href="profile.html" class="user-chip-link" aria-label="Profile">👤</a>';
-      return;
+    var mobileHolder = document.getElementById('mobileGoogleNavBtn');
+    var holders = [holder];
+    if (mobileHolder) holders.push(mobileHolder);
+
+    if (!holders.length) return;
+
+    function renderUserChip(target){
+      target.classList.add('user-chip');
+      target.innerHTML = '<a href="profile.html" class="user-chip-link" aria-label="Profile">👤</a>';
     }
 
+    if (isLoggedIn()) {
+      holders.forEach(renderUserChip);
+      return;
+    }
     // Ensure GIS loaded
     function init(){
       var cid = clientId();
@@ -140,7 +149,10 @@
           showError(lastMsg);
         }
       });
-      google.accounts.id.renderButton(holder, { theme: 'filled_black', type: 'icon', size: 'medium', shape: 'circle', logo_alignment: 'center' });
+      var renderOpts = { theme: 'filled_black', type: 'icon', size: 'medium', shape: 'circle', logo_alignment: 'center' };
+      holders.forEach(function(h){
+        google.accounts.id.renderButton(h, renderOpts);
+      });
     }
 
     if (window.google && google.accounts && google.accounts.id) init();
