@@ -1170,8 +1170,9 @@ function mountFeedback(){
     const payload = { rating, message: msg, page: location.pathname, ua: navigator.userAgent };
     // Try optional API endpoint (if available), otherwise fallback to WhatsApp
     let ok = false;
-    if(typeof API_BASE === "string" && API_BASE){
-      ok = await postJSON(`${API_BASE}/api/public/feedback`, payload);
+    if(typeof API_BASE === "string"){
+      const endpoint = API_BASE ? `${API_BASE}/api/feedback` : "/api/feedback";
+      ok = await postJSON(endpoint, payload);
     }
     if(!ok && typeof WHATSAPP_NUMBER === "string" && WHATSAPP_NUMBER){
       const text = `Feedback%0A${location.href}%0A?: ${rating}%0A${encodeURIComponent(msg)}`;
