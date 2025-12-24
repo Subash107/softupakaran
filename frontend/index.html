@@ -14,6 +14,12 @@
 </link>  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body class="home">
+<div class="promoRibbon">
+  <div class="container">
+    <span>Limited offer: 10% off on Netflix &amp; ChatGPT plans. Use code <strong>SOFT10</strong>.</span>
+    <a class="btn icon light" href="category.html?c=subscriptions">Use code</a>
+  </div>
+</div>
 <header class="topbar">
 <div class="container">
 <div class="nav">
@@ -103,7 +109,21 @@
 </div>
 <div class="heroDots"></div>
 </section>
-<section class="section">
+<div class="heroStats" data-hero-stats="">
+  <div>
+    <strong>Instant delivery</strong>
+    <p>5-30 min digital delivery</p>
+  </div>
+  <div>
+    <strong>24/7 WhatsApp</strong>
+    <p>Support + proof</p>
+  </div>
+  <div>
+    <strong>Secure checkout</strong>
+    <p>Encrypted &amp; private</p>
+  </div>
+</div>
+<section class="section" id="why">
 <div class="sectionHeader">
 <div>
 <h2>Collections</h2>
@@ -111,6 +131,26 @@
 </div>
 </div>
 <div class="grid" data-categories=""></div>
+</section>
+<section class="section curated" id="trending">
+  <div class="sectionHeader">
+    <div>
+      <h2>Trending Subscriptions</h2>
+      <p>Hot plans curated for Nepal.</p>
+    </div>
+    <a class="btn" href="category.html?c=subscriptions">Explore</a>
+  </div>
+  <div class="grid" data-curated="subscriptions"></div>
+</section>
+<section class="section curated" id="tools">
+  <div class="sectionHeader">
+    <div>
+      <h2>Tools &amp; WordPress Packs</h2>
+      <p>The latest plugins, themes, and dev bundles.</p>
+    </div>
+    <a class="btn" href="category.html?c=wp-plugins">View tools</a>
+  </div>
+  <div class="grid" data-curated="wp-plugins"></div>
 </section>
 <section class="section" id="popular">
 <div class="sectionHeader">
@@ -122,7 +162,7 @@
 </div>
 <div class="grid" data-popular=""></div>
 </section>
-<section class="section">
+<section class="section" id="testimonials">
 <div class="sectionHeader">
 <div>
 <h2>Why Choose Us</h2>
@@ -131,16 +171,19 @@
 </div>
 <div class="features">
 <div class="feature">
-<h3>Smart Catalog</h3>
-<p>Find the right subscription, plugin, or theme fast with curated collections.</p>
+  <span class="feature-icon">⚡</span>
+  <h3>Smart Catalog</h3>
+  <p>Find the right subscription, plugin, or theme fast with curated collections.</p>
 </div>
 <div class="feature">
-<h3>Fast Checkout</h3>
-<p>Transparent pricing and a single-screen checkout keep you moving.</p>
+  <span class="feature-icon">⚙️</span>
+  <h3>Fast Checkout</h3>
+  <p>Transparent pricing and a single-screen checkout keep you moving.</p>
 </div>
 <div class="feature">
-<h3>Always On Support</h3>
-<p>Clear delivery status with WhatsApp follow-up when you need it.</p>
+  <span class="feature-icon">💬</span>
+  <h3>Always On Support</h3>
+  <p>Clear delivery status with WhatsApp follow-up when you need it.</p>
 </div>
 </div>
 </section>
@@ -190,6 +233,15 @@
 <a href="#">Khalti (placeholder)</a>
 <a href="#">Bank Transfer</a>
 </div>
+<div>
+<h4>Quick links</h4>
+<a href="#collections">Collections</a>
+<a href="#trending">Trending</a>
+<a href="#tools">Tools</a>
+<a href="#popular">Popular</a>
+<a href="#why">Why choose</a>
+<a href="#testimonials">Feedback</a>
+</div>
 </div>
 <div class="copy">Â© 2025 SoftUpakaran (demo). All rights reserved.</div>
 </div>
@@ -228,6 +280,9 @@
   <script src="js/dev-api-override.js"></script>
 <script src="js/auto-init.js"></script>
   <script src="js/google-nav.js"></script>
+<a class="chatFab" href="https://wa.me/97721121212121" target="_blank" rel="noreferrer" aria-label="WhatsApp chat">
+  <span>Chat on WhatsApp</span>
+</a>
 </body>
 </html>
 

@@ -344,6 +344,48 @@ function wireAddButtons(root=document){
   });
 }
 
+const CURATED_CONFIG = [
+  {
+    attr: "subscriptions",
+    categories: ["subscriptions", "netflix"],
+    fallback: "More subscriptions arriving soon.",
+  },
+  {
+    attr: "wp-plugins",
+    categories: ["wp-plugins", "wp-themes"],
+    fallback: "More tools and themes loading shortly.",
+  },
+];
+
+function renderCuratedSections(){
+  CURATED_CONFIG.forEach((cfg) => {
+    const root = document.querySelector(`[data-curated="${cfg.attr}"]`);
+    if(!root) return;
+    const items = products.filter(p => cfg.categories.includes(p.category)).slice(0, 6);
+    if(items.length){
+      root.innerHTML = items.map(productCard).join("");
+      wireAddButtons(root);
+      ensureVisible(root);
+    } else {
+      root.innerHTML = `
+        <div class="card" style="grid-column:1/-1">
+          <div class="pad">
+            <p class="cardTitle">Loading curated picks</p>
+            <p class="cardMeta">${cfg.fallback}</p>
+          </div>
+        </div>
+      `;
+    }
+  });
+}
+
+function refreshHomeSections(){
+  renderCuratedSections();
+  renderPopular();
+  renderCategoryPage();
+  renderProductPage();
+}
+
 function renderPopular(){
   const root = document.querySelector("[data-popular]");
   if(!root) return;
@@ -630,119 +672,120 @@ function wireCartButtons(){
 }
 
 function wireSearch(){
-  const input = document.querySelector("[data-search]");
-  const dropdown = document.querySelector("[data-search-dropdown]");
-  if(!input) return;
-  let suggestions = [];
-  let activeIndex = -1;
-  let blurTimer = null;
-  const root = document.querySelector("[data-popular]");
+  document.querySelectorAll("[data-search]").forEach((input) => {
+    if(!input) return;
+    const dropdown = input.closest(".search")?.querySelector("[data-search-dropdown]");
+    let suggestions = [];
+    let activeIndex = -1;
+    let blurTimer = null;
+    const root = document.querySelector("[data-popular]");
 
-  const hideDropdown = () => {
-    if(!dropdown) return;
-    dropdown.classList.remove("visible");
-    activeIndex = -1;
-  };
-
-  const setActive = (index) => {
-    if(index < 0) index = -1;
-    if(!dropdown) return;
-    activeIndex = index;
-    const buttons = dropdown.querySelectorAll(".search-dropdown-item");
-    buttons.forEach((btn, i) => btn.classList.toggle("active", i === index));
-  };
-
-  const renderDropdown = (items, query) => {
-    if(!dropdown) return;
-    if(!query){
-      dropdown.innerHTML = "";
-      hideDropdown();
-      return;
-    }
-    if(!items.length){
-      dropdown.innerHTML = `<div class="search-dropdown-empty">No results for "${escapeHtml(query)}"</div>`;
-      dropdown.classList.add("visible");
-      suggestions = [];
+    const hideDropdown = () => {
+      if(!dropdown) return;
+      dropdown.classList.remove("visible");
       activeIndex = -1;
-      return;
-    }
-    suggestions = items;
-    activeIndex = -1;
-    dropdown.innerHTML = items.map((p, idx) => `
-      <button type="button" class="search-dropdown-item" data-search-id="${encodeURIComponent(p.id)}" data-search-index="${idx}">
-        <span>${escapeHtml(p.name)}</span>
-        <small>${formatNPR(p.price)}</small>
-      </button>
-    `).join("");
-    dropdown.classList.add("visible");
-  };
+    };
 
-  const updateResults = () => {
-    const q = input.value.trim().toLowerCase();
-    if(!root) return;
-    const filtered = q ? products.filter(p => p.name.toLowerCase().includes(q)) : [];
-    const gridItems = filtered.slice(0, 8);
-    root.innerHTML = gridItems.length ? gridItems.map(productCard).join("") : `
-      <div class="card" style="grid-column:1/-1"><div class="pad">
-        <p class="cardTitle">No matches</p>
-        <p class="cardMeta">Try a different keyword.</p>
-      </div></div>
-    `;
-    wireAddButtons(root);
-    ensureVisible(root);
-    renderDropdown(filtered.slice(0, 6), q);
-  };
+    const setActive = (index) => {
+      if(index < 0) index = -1;
+      if(!dropdown) return;
+      activeIndex = index;
+      const buttons = dropdown.querySelectorAll(".search-dropdown-item");
+      buttons.forEach((btn, i) => btn.classList.toggle("active", i === index));
+    };
 
-  input.addEventListener("input", updateResults);
-  input.addEventListener("focus", () => {
-    if(blurTimer) { clearTimeout(blurTimer); blurTimer = null; }
-    if(suggestions.length && dropdown){
+    const renderDropdown = (items, query) => {
+      if(!dropdown) return;
+      if(!query){
+        dropdown.innerHTML = "";
+        hideDropdown();
+        return;
+      }
+      if(!items.length){
+        dropdown.innerHTML = `<div class="search-dropdown-empty">No results for "${escapeHtml(query)}"</div>`;
+        dropdown.classList.add("visible");
+        suggestions = [];
+        activeIndex = -1;
+        return;
+      }
+      suggestions = items;
+      activeIndex = -1;
+      dropdown.innerHTML = items.map((p, idx) => `
+        <button type="button" class="search-dropdown-item" data-search-id="${encodeURIComponent(p.id)}" data-search-index="${idx}">
+          <span>${escapeHtml(p.name)}</span>
+          <small>${formatNPR(p.price)}</small>
+        </button>
+      `).join("");
       dropdown.classList.add("visible");
-    }
-  });
-  input.addEventListener("blur", () => {
-    blurTimer = setTimeout(() => hideDropdown(), 180);
-  });
+    };
 
-  input.addEventListener("keydown", (e) => {
-    if(!dropdown || !dropdown.classList.contains("visible") || !suggestions.length) return;
-    if(e.key === "ArrowDown"){
-      e.preventDefault();
-      setActive((activeIndex + 1) % suggestions.length);
-    } else if(e.key === "ArrowUp"){
-      e.preventDefault();
-      setActive((activeIndex + suggestions.length - 1) % suggestions.length);
-    } else if(e.key === "Enter"){
-      if(activeIndex >= 0 && activeIndex < suggestions.length){
+    const updateResults = () => {
+      const q = input.value.trim().toLowerCase();
+      if(!root) return;
+      const filtered = q ? products.filter(p => p.name.toLowerCase().includes(q)) : [];
+      const gridItems = filtered.slice(0, 8);
+      root.innerHTML = gridItems.length ? gridItems.map(productCard).join("") : `
+        <div class="card" style="grid-column:1/-1"><div class="pad">
+          <p class="cardTitle">No matches</p>
+          <p class="cardMeta">Try a different keyword.</p>
+        </div></div>
+      `;
+      wireAddButtons(root);
+      ensureVisible(root);
+      renderDropdown(filtered.slice(0, 6), q);
+    };
+
+    input.addEventListener("input", updateResults);
+    input.addEventListener("focus", () => {
+      if(blurTimer) { clearTimeout(blurTimer); blurTimer = null; }
+      if(suggestions.length && dropdown){
+        dropdown.classList.add("visible");
+      }
+    });
+    input.addEventListener("blur", () => {
+      blurTimer = setTimeout(() => hideDropdown(), 180);
+    });
+
+    input.addEventListener("keydown", (e) => {
+      if(!dropdown || !dropdown.classList.contains("visible") || !suggestions.length) return;
+      if(e.key === "ArrowDown"){
         e.preventDefault();
-        const target = suggestions[activeIndex];
-        if(target){
-          window.location.href = `product.html?id=${encodeURIComponent(target.id)}`;
+        setActive((activeIndex + 1) % suggestions.length);
+      } else if(e.key === "ArrowUp"){
+        e.preventDefault();
+        setActive((activeIndex + suggestions.length - 1) % suggestions.length);
+      } else if(e.key === "Enter"){
+        if(activeIndex >= 0 && activeIndex < suggestions.length){
+          e.preventDefault();
+          const target = suggestions[activeIndex];
+          if(target){
+            window.location.href = `product.html?id=${encodeURIComponent(target.id)}`;
+          }
+        }
+      } else if(e.key === "Escape"){
+        hideDropdown();
+      }
+    });
+
+    document.addEventListener("click", (e) => {
+      if(!dropdown) return;
+      if(!e.target.closest(".search")){
+        hideDropdown();
+      }
+    });
+
+    dropdown?.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+    });
+    dropdown?.addEventListener("click", (e) => {
+      const btn = (e.target.closest ? e.target.closest("[data-search-id]") : null);
+      if(btn){
+        const id = btn.getAttribute("data-search-id");
+        if(id){
+          window.location.href = `product.html?id=${encodeURIComponent(id)}`;
         }
       }
-    } else if(e.key === "Escape"){
-      hideDropdown();
-    }
-  });
-
-  document.addEventListener("click", (e) => {
-    if(!dropdown) return;
-    if(!e.target.closest(".search")){
-      hideDropdown();
-    }
-  });
-
-  dropdown?.addEventListener("mousedown", (e) => {
-    e.preventDefault();
-  });
-  dropdown?.addEventListener("click", (e) => {
-    const btn = (e.target.closest ? e.target.closest("[data-search-id]") : null);
-    if(btn){
-      const id = btn.getAttribute("data-search-id");
-      if(id){
-        window.location.href = `product.html?id=${encodeURIComponent(id)}`;
-      }
-    }
+    });
   });
 }
 
@@ -970,9 +1013,7 @@ async function loadCatalogFromApi(){
 
 async function init(){
   renderCategories();
-  renderPopular();
-  renderCategoryPage();
-  renderProductPage();
+  refreshHomeSections();
   await loadPublicSettings();
   const loaded = await loadCatalogFromApi();
   if(!loaded){
@@ -987,9 +1028,7 @@ async function init(){
   await loadTestimonials();
   updateCartCount();
   renderCategories();
-  renderPopular();
-  renderCategoryPage();
-  renderProductPage();
+  refreshHomeSections();
   buildCartModal();
   wirePayModal();
   wireCartButtons();
