@@ -38,7 +38,13 @@ const API_BASE = (localStorage.getItem("SPK_API_BASE") || window.API_BASE || "")
   const ILM_PROXY_BASE = API_BASE ? `${API_BASE}/api/public/ilm` : "";
 
 const CATEGORY_ORDER = [
+  "freefire",
+  "pubg",
+  "gift",
   "subscriptions",
+  "spotify",
+  "social",
+  "gears",
   "netflix",
   "wp-plugins",
   "wp-themes",
@@ -48,13 +54,19 @@ const CATEGORY_ORDER = [
 ];
 
 const CATEGORY_NOTES = {
-  "subscriptions": "Instant activation",
-  "netflix": "Premium access - instant",
-  "wp-plugins": "GPL license - instant download",
-  "wp-themes": "Theme files - instant download",
-  "ecommerce": "WooCommerce-ready package",
-  "vpn": "Private browsing - 1 year",
-  "web-development": "Custom delivery - contact us"
+  "freefire": "Top up diamonds instantly with instant delivery.",
+  "pubg": "Global PUBG UC pins and fast UID top-ups.",
+  "gift": "Gift cards, credits, and promo codes for apps.",
+  "subscriptions": "Premium subscriptions with instant activation.",
+  "spotify": "Spotify Premium, family, and student plans.",
+  "social": "Social media coins, boosters, and growth packs.",
+  "gears": "Gaming gears, mice, headsets, and keyboards.",
+  "netflix": "Netflix profiles and streaming bundles.",
+  "wp-plugins": "GPL plugins for SEO, caching, and security.",
+  "wp-themes": "Themes ready for news, blogs, and shops.",
+  "ecommerce": "WooCommerce-ready templates and bundles.",
+  "vpn": "VPN services for private browsing and streaming.",
+  "web-development": "Turnkey web development toolkits."
 };
 
 const ILM_CATEGORY_SLUG_MAP = {
@@ -67,11 +79,17 @@ const ILM_CATEGORY_SLUG_MAP = {
 };
 
 const DEFAULT_CATEGORIES = [
+  { id:"freefire", name:"Free Fire Top Up", tag:"Top up diamonds instantly", icon:"FF" },
+  { id:"pubg", name:"PUBG UC", tag:"UC pins & UID top-up", icon:"PG" },
+  { id:"gift", name:"Gift Cards", tag:"Steam, Google Play & more", icon:"GC" },
   { id:"subscriptions", name:"Subscriptions", tag:"Premium tools and streaming", icon:"SUB" },
+  { id:"spotify", name:"Spotify", tag:"Premium plans & top-ups", icon:"SP" },
+  { id:"social", name:"Social Media Boost", tag:"Coins, credits & boosts", icon:"SM" },
+  { id:"gears", name:"Gaming Gears", tag:"Mice, headsets, keyboards", icon:"GG" },
   { id:"netflix", name:"Netflix", tag:"Plans and profiles", icon:"NF" },
   { id:"wp-plugins", name:"WP Plugins", tag:"SEO, cache, security tools", icon:"PL" },
   { id:"wp-themes", name:"WP Themes", tag:"Blog, news, and shop themes", icon:"TH" },
-  { id:"ecommerce", name:"eCommerce", tag:"WooCommerce themes and plugins", icon:"EC" },
+  { id:"ecommerce", name:"eCommerce", tag:"WooCommerce-ready package", icon:"EC" },
   { id:"vpn", name:"VPN", tag:"Secure browsing plans", icon:"VPN" },
   { id:"web-development", name:"Web Development", tag:"Custom website builds", icon:"WEB" }
 ];
