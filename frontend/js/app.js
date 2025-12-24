@@ -1114,7 +1114,8 @@ function mountFeedback(){
   btn.className = "feedbackButton";
   btn.setAttribute("type","button");
   btn.innerHTML = "?? Feedback";
-  document.body.appendChild(btn);
+  const floatingSupport = document.querySelector("[data-floating-actions]");
+  (floatingSupport || document.body).appendChild(btn);
 
   const overlay = document.createElement("div");
   overlay.className = "feedbackOverlay";
