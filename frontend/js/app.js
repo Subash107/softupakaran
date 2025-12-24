@@ -122,6 +122,50 @@ const DEFAULT_PRODUCTS = [
   { id:"ilm-11436", name:"Nepali News Portal Development", category:"web-development", price:48950, img:"https://store.ilovemithila.com/wp-content/uploads/2025/08/original-cc830f55310acaa02cffc4d60f4c4db9-e1754736157788.webp", note:CATEGORY_NOTES["web-development"] }
 ];
 
+const LAZY_IMAGE_PLACEHOLDER = "assets/product-1.svg";
+const LAZY_IMAGE_MARGIN = "140px";
+
+const lazyObserver = typeof IntersectionObserver !== "undefined"
+  ? new IntersectionObserver((entries, observer) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          loadLazyImage(entry.target);
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { rootMargin: LAZY_IMAGE_MARGIN })
+  : null;
+
+function loadLazyImage(img) {
+  if (!img || img.dataset.loaded) return;
+  const src = img.dataset.src;
+  if (src) img.src = src;
+  const srcset = img.dataset.srcset;
+  if (srcset) img.srcset = srcset;
+  img.dataset.loaded = "1";
+  img.classList.add("loaded");
+}
+
+function initLazyImages(root = document) {
+  const images = Array.from((root || document).querySelectorAll("img.lazy[data-src]"));
+  images.forEach((img) => {
+    if (img.dataset.loaded) return;
+    if (!img.getAttribute("src")) img.src = LAZY_IMAGE_PLACEHOLDER;
+    if (lazyObserver) {
+      lazyObserver.observe(img);
+    } else {
+      loadLazyImage(img);
+    }
+  });
+}
+
+function lazyImage(src, alt = "", extraCls = "") {
+  const safeSrc = escapeHtml(src || LAZY_IMAGE_PLACEHOLDER);
+  const safeAlt = escapeHtml(alt || "");
+  const classes = ["lazy", extraCls].filter(Boolean).join(" ");
+  return `<img class="${classes}" loading="lazy" decoding="async" src="${LAZY_IMAGE_PLACEHOLDER}" data-src="${safeSrc}" alt="${safeAlt}">`;
+}
+
 function decodeHtmlEntities(value){
   let s = String(value || "");
   s = s.replace(/&amp;/g, "&")
@@ -275,6 +319,7 @@ function $all(sel, root=document){ return Array.from(root.querySelectorAll(sel))
 function ensureVisible(root=document){
   $all(".card, .product-card, .product-item", root)
     .forEach(el => el.classList.add("in-view"));
+  initLazyImages(root);
 }
 
 
@@ -301,7 +346,7 @@ function productCard(p){
   return `
   <div class="card">
     <a href="product.html?id=${encodeURIComponent(p.id)}" class="thumb">
-      <img src="${p.img}" alt="${p.name}">
+      ${lazyImage(p.img, p.name)}
     </a>
     <div class="pad">
       <p class="cardTitle">${p.name}</p>
@@ -375,7 +420,7 @@ function renderProductPage(){
     <div class="heroGrid">
       <div class="heroCard">
         <div class="thumb" style="aspect-ratio: 16/11">
-          <img src="${p.img}" alt="${p.name}">
+          ${lazyImage(p.img, p.name, "hero-img")}
         </div>
       </div>
       <div class="heroCard">
@@ -402,6 +447,7 @@ function renderProductPage(){
     </div>
   `;
   $("#buyNow")?.addEventListener("click", () => { addToCart(p.id, 1); openCart(); });
+  ensureVisible(root);
 }
 
 function buildCartModal(){
@@ -450,7 +496,7 @@ function renderCart(){
 
   body.innerHTML = lines.map(l => `
     <div class="cartRow">
-      <img src="${l.img}" alt="${l.name}">
+      ${lazyImage(l.img, l.name, "cart-thumb")}
       <div>
         <p class="name">${l.name}</p>
         <p class="desc">${formatNPR(l.price)} - ${l.note}</p>
@@ -468,7 +514,7 @@ function renderCart(){
         <h4>Pay via eSewa QR</h4>
         <p>Scan the QR to pay. Then click <b>Checkout</b> to send proof on WhatsApp.</p>
         <div class="qrWrap">
-          <img src="${ESEWA_QR_IMAGE}" alt="eSewa QR">
+          <img src="${ESEWA_QR_IMAGE}" alt="eSewa QR" loading="lazy" decoding="async">
         </div>
       </div>
 
@@ -480,6 +526,8 @@ function renderCart(){
       </div>
     </div>
   `;
+
+  initLazyImages(body);
 
   footer.innerHTML = `
     <div>
