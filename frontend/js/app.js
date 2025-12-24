@@ -1128,7 +1128,7 @@ function mountFeedback(){
       <div class="feedbackForm" role="form">
         <label>Rating</label>
         <div class="starRow" data-stars="">
-          ${[1,2,3,4,5].map(i => `<span class="star" data-val="${i}">?</span>`).join("")}
+          ${[1,2,3,4,5].map(i => `<span class="star" data-val="${i}">&#9733;</span>`).join("")}
         </div>
         <label>Message</label>
         <textarea rows="4" placeholder="What can we improve?" data-fb-msg=""></textarea>
