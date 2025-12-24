@@ -79,6 +79,7 @@
         <button class="tab active" data-tab="settings">Settings</button>
         <button class="tab" data-tab="users">Users</button>
         <button class="tab" data-tab="feedback">Feedback</button>
+        <button class="tab" data-tab="categories">Categories</button>
         <button class="tab" data-tab="products">Products</button>
       </div>
 
@@ -266,6 +267,57 @@
             </table>
           </div>
           <div id="fbMsg" class="msg"></div>
+        </div>
+
+        <div class="pane" id="pane-categories">
+          <div class="pane-head">
+            <div style="display:flex; align-items:flex-end; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+              <div>
+                <h3>Categories</h3>
+                <p class="muted">Manage category pills shown on the site.</p>
+              </div>
+              <div class="actions" style="padding:0;">
+                <button id="btnCatRefresh" class="btn">Refresh</button>
+                <button id="btnCatNew" class="btn primary">+ Add Category</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card inner hidden" id="catEditor" style="margin-bottom:12px;">
+            <h3 id="catEditorTitle" style="margin-top:0;">Add category</h3>
+            <div class="grid2">
+              <label class="field">
+                <span>ID (slug)</span>
+                <input id="catId" type="text" placeholder="netflix" />
+              </label>
+              <label class="field">
+                <span>Name</span>
+                <input id="catName" type="text" placeholder="Netflix" />
+              </label>
+              <label class="field">
+                <span>Tagline</span>
+                <input id="catTag" type="text" placeholder="Plans and profiles" />
+              </label>
+              <label class="field">
+                <span>Icon</span>
+                <input id="catIcon" type="text" placeholder="NF" />
+              </label>
+            </div>
+            <div class="actions">
+              <button id="btnCatSave" class="btn primary">Save category</button>
+              <button id="btnCatCancel" class="btn">Cancel</button>
+            </div>
+          </div>
+
+          <div class="tablewrap">
+            <table class="table" id="catTable">
+              <thead>
+                <tr><th>ID</th><th>Name</th><th>Tag</th><th>Icon</th><th>Actions</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div id="catMsg" class="msg"></div>
         </div>
 
         <div class="pane" id="pane-products">

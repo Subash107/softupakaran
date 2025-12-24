@@ -161,6 +161,13 @@
       setMsg($("fbMsg"), String(e.message || e), "error");
     }
 
+    // Categories
+    try {
+      await refreshCategories();
+    } catch (_) {
+      // ignore
+    }
+
 // Products
     if ($("prodTable")) {
       try { await refreshProducts(); } catch (e) { /* ignore */ }
@@ -639,6 +646,140 @@ function formatDate(v) {
     if (!r.ok) throw new Error("Failed to delete feedback: " + r.status);
   }
 
+  // ---------- Categories (CRUD) ----------
+  let catEditingMode = "new"; // "new" | "edit"
+  let catEditingId = null;
+
+  function showCatEditor(show) {
+    const el = $("catEditor");
+    if (!el) return;
+    el.classList.toggle("hidden", !show);
+  }
+
+  function clearCatEditor() {
+    catEditingMode = "new";
+    catEditingId = null;
+    $("catEditorTitle").textContent = "Add category";
+    $("catId").value = "";
+    $("catName").value = "";
+    $("catTag").value = "";
+    $("catIcon").value = "";
+    $("catId").removeAttribute("disabled");
+  }
+
+  function fillCatEditor(c) {
+    catEditingMode = "edit";
+    catEditingId = c.id;
+    $("catEditorTitle").textContent = "Edit category: " + (c.name || c.id);
+    $("catId").value = c.id || "";
+    $("catName").value = c.name || "";
+    $("catTag").value = c.tag || "";
+    $("catIcon").value = c.icon || "";
+    $("catId").setAttribute("disabled", "disabled");
+  }
+
+  async function refreshCategories() {
+    const table = $("catTable");
+    if (!table) return;
+    const r = await api("/api/admin/categories");
+    if (!r.ok) throw new Error("Categories fetch failed: " + r.status);
+    const rows = await r.json();
+    categoriesCache = Array.isArray(rows) ? rows : [];
+    populateCategorySelects();
+
+    const tbody = table.querySelector("tbody");
+    tbody.innerHTML = "";
+    categoriesCache.forEach(c => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${escapeHtml(c.id)}</td>
+        <td>${escapeHtml(c.name || "")}</td>
+        <td>${escapeHtml(c.tag || "")}</td>
+        <td>${escapeHtml(c.icon || "")}</td>
+        <td>
+          <button class="btn" data-cat-edit="${escapeAttr(c.id)}">Edit</button>
+          <button class="btn danger" data-cat-del="${escapeAttr(c.id)}" data-cat-del-name="${escapeAttr(c.name || c.id)}">Delete</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    setMsg($("catMsg"), categoriesCache.length ? "" : "No categories found.");
+  }
+
+  async function saveCategory() {
+    try {
+      setMsg($("catMsg"), "");
+      const payload = {
+        id: ($("catId")?.value || "").trim(),
+        name: ($("catName")?.value || "").trim(),
+        tag: ($("catTag")?.value || "").trim(),
+        icon: ($("catIcon")?.value || "").trim(),
+      };
+
+      if (catEditingMode === "new" && !payload.id) {
+        setMsg($("catMsg"), "ID is required", "error");
+        return;
+      }
+      if (!payload.name) {
+        setMsg($("catMsg"), "Name is required", "error");
+        return;
+      }
+
+      if (catEditingMode === "new") {
+        const r = await api("/api/admin/categories", {
+          method: "POST",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify(payload),
+        });
+        if (!r.ok) {
+          const txt = await safeText(r);
+          setMsg($("catMsg"), "Create failed: " + txt, "error");
+          return;
+        }
+        setMsg($("catMsg"), "Category created.", "success");
+      } else {
+        const id = catEditingId || payload.id;
+        delete payload.id;
+        const r = await api("/api/admin/categories/" + encodeURIComponent(id), {
+          method: "PATCH",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify(payload),
+        });
+        if (!r.ok) {
+          const txt = await safeText(r);
+          setMsg($("catMsg"), "Update failed: " + txt, "error");
+          return;
+        }
+        setMsg($("catMsg"), "Category updated.", "success");
+      }
+
+      clearCatEditor();
+      showCatEditor(false);
+      await refreshCategories();
+    } catch (e) {
+      setMsg($("catMsg"), String(e.message || e), "error");
+    }
+  }
+
+  async function deleteCategory(id, name) {
+    if (!id) return;
+    if (!confirm("Delete category " + (name ? (name + " (" + id + ")") : id) + " ?")) return;
+
+    try {
+      const r = await api("/api/admin/categories/" + encodeURIComponent(id), { method: "DELETE" });
+      if (!r.ok) {
+        const txt = await safeText(r);
+        setMsg($("catMsg"), "Delete failed: " + txt, "error");
+        return;
+      }
+      setMsg($("catMsg"), "Category deleted.", "success");
+      await refreshCategories();
+    } catch (e) {
+      setMsg($("catMsg"), String(e.message || e), "error");
+    }
+  }
+
   // ---------- Products (CRUD + Search + Pagination) ----------
   let prodEditingMode = "new"; // "new" | "edit"
   let prodEditingId = null;
@@ -1001,6 +1142,35 @@ document.addEventListener("DOMContentLoaded", async () => {
         await refreshFeedback({ resetPage: false });
       } catch (err) {
         setMsg($("fbMsg"), String(err.message || err), "error");
+      }
+    });
+
+    // Categories
+    $("btnCatRefresh")?.addEventListener("click", () => refreshCategories());
+    $("btnCatNew")?.addEventListener("click", () => {
+      clearCatEditor();
+      showCatEditor(true);
+      setMsg($("catMsg"), "");
+    });
+    $("btnCatSave")?.addEventListener("click", saveCategory);
+    $("btnCatCancel")?.addEventListener("click", () => {
+      clearCatEditor();
+      showCatEditor(false);
+    });
+    $("catTable")?.addEventListener("click", (e) => {
+      const editBtn = e.target?.closest?.("button[data-cat-edit]");
+      if (editBtn) {
+        const id = editBtn.getAttribute("data-cat-edit");
+        const cat = categoriesCache.find(c => c.id === id);
+        if (cat) {
+          showCatEditor(true);
+          fillCatEditor(cat);
+        }
+        return;
+      }
+      const delBtn = e.target?.closest?.("button[data-cat-del]");
+      if (delBtn) {
+        deleteCategory(delBtn.getAttribute("data-cat-del"), delBtn.getAttribute("data-cat-del-name"));
       }
     });
 

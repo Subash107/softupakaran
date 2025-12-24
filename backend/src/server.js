@@ -671,6 +671,92 @@ app.delete("/api/admin/users/:id", adminRequired, async (req, res) => {
   }
 });
 
+// ---------- admin: categories ----------
+app.get("/api/admin/categories", adminRequired, async (_req, res) => {
+  try {
+    const rows = await dbAll("SELECT * FROM categories ORDER BY name ASC");
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to load categories" });
+  }
+});
+
+app.post("/api/admin/categories", adminRequired, express.json(), async (req, res) => {
+  const body = req.body || {};
+  const id = String(body.id || "").trim();
+  const name = String(body.name || "").trim();
+  const tag = String(body.tag || "").trim();
+  const icon = String(body.icon || "").trim();
+
+  if (!id) return res.status(400).json({ error: "id is required" });
+  if (!name) return res.status(400).json({ error: "name is required" });
+
+  try {
+    const existing = await dbGet("SELECT id FROM categories WHERE id = ?", [id]).catch(() => null);
+    if (existing) return res.status(409).json({ error: "Category already exists" });
+    await dbRun(
+      "INSERT INTO categories (id, name, tag, icon) VALUES (?, ?, ?, ?)",
+      [id, name, tag || null, icon || null]
+    );
+    res.status(201).json({ ok: true, id });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to create category" });
+  }
+});
+
+app.patch("/api/admin/categories/:id", adminRequired, express.json(), async (req, res) => {
+  const id = String(req.params.id || "").trim();
+  if (!id) return res.status(400).json({ error: "Invalid id" });
+
+  const body = req.body || {};
+  const fields = [];
+  const params = [];
+
+  if (body.name !== undefined) {
+    const name = String(body.name || "").trim();
+    if (!name) return res.status(400).json({ error: "name is required" });
+    fields.push("name = ?");
+    params.push(name);
+  }
+  if (body.tag !== undefined) {
+    const tag = String(body.tag || "").trim();
+    fields.push("tag = ?");
+    params.push(tag || null);
+  }
+  if (body.icon !== undefined) {
+    const icon = String(body.icon || "").trim();
+    fields.push("icon = ?");
+    params.push(icon || null);
+  }
+
+  if (!fields.length) return res.status(400).json({ error: "No changes provided" });
+
+  try {
+    const result = await dbRun(`UPDATE categories SET ${fields.join(", ")} WHERE id = ?`, params.concat([id]));
+    if (!result.changes) return res.status(404).json({ error: "Not found" });
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to update category" });
+  }
+});
+
+app.delete("/api/admin/categories/:id", adminRequired, async (req, res) => {
+  const id = String(req.params.id || "").trim();
+  if (!id) return res.status(400).json({ error: "Invalid id" });
+
+  try {
+    const row = await dbGet("SELECT COUNT(*) AS cnt FROM products WHERE category_id = ?", [id]).catch(() => null);
+    if ((row?.cnt || 0) > 0) {
+      return res.status(409).json({ error: "Category has products; reassign them first" });
+    }
+    const result = await dbRun("DELETE FROM categories WHERE id = ?", [id]);
+    if (!result.changes) return res.status(404).json({ error: "Not found" });
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to delete category" });
+  }
+});
+
 // ---------- store data ----------
 app.get("/api/categories", (req, res) => {
   db.all("SELECT * FROM categories", (err, rows) => {
