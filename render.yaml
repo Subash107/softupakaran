@@ -2,7 +2,7 @@ services:
   - type: web
     name: softupakaran-backend
     env: node
-    rootDir: backend
+    rootDir: services/backend
     buildCommand: npm install
     startCommand: node src/server.js
     envVars:

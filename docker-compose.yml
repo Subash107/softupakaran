@@ -1,18 +1,18 @@
 services:
   backend:
-    build: ./backend
+    build: ./services/backend
     ports:
       - "4000:4000"
     env_file:
-      - ./backend/.env.example
+      - ./services/backend/.env.example
     volumes:
-      - ./backend/data:/app/data
-      - ./backend/uploads:/app/uploads
+      - ./services/backend/data:/app/data
+      - ./services/backend/uploads:/app/uploads
     environment:
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
 
   frontend:
-    build: ./frontend
+    build: ./services/frontend
     ports:
       - "8085:80"
     depends_on:

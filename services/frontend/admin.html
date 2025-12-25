@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta name="api-base" content="https://softupakaran-backend.onrender.com">
+  <meta name="google-client-id" content="161160759250-tvcu3a09i8gtdeaia6gpk04jo343oiet.apps.googleusercontent.com">
+  <script src="js/env.js"></script>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Softupakaran Admin</title>
+  <link rel="stylesheet" href="styles.css"/>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body class="page">
+  <header class="topbar">
+    <div class="container">
+      <div class="nav">
+        <a class="brand" href="index.html">Instant Delivery</a>
+        <a href="index.html">Home🏠</a>
+        <a href="product.html">Cart🛒</a>
+        <a href="profile.html">Profile👤</a>
+        <a id="adminLink" style="display:none" class="active" href="admin.html">Admin🔧</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container admin-page">
+    <div class="hero">
+      <h1>Admin Panel</h1>
+      <p class="muted">Manage WhatsApp, eSewa QR, users and customer feedback.</p>
+    </div>
+
+    <section id="loginCard" class="card">
+      <h2>Admin Login</h2>
+      <p class="muted">Use your admin email + password.</p>
+
+      <div class="grid2">
+        <label class="field">
+          <span>Email</span>
+          <input id="email" type="email" placeholder="admin@softupakaran.local" autocomplete="username"/>
+        </label>
+
+        <label class="field">
+          <span>Password</span>
+          <input id="password" type="password" placeholder="••••••••" autocomplete="current-password"/>
+        </label>
+      </div>
+
+      <div class="grid2">
+        <label class="field">
+          <span>Authenticator code</span>
+          <input id="otp" type="text" inputmode="numeric" placeholder="123456" autocomplete="one-time-code"/>
+        </label>
+
+        <label class="field">
+          <span>API Base URL</span>
+          <input id="apiBase" type="text" placeholder="http://localhost:4000"/>
+          <small class="muted">Docker on your PC: keep this as <b>http://localhost:4000</b></small>
+        </label>
+      </div>
+
+      <div class="actions">
+        <button id="btnLogin" class="btn primary">Login</button> <button id="btnApiTest" type="button" class="btn btn-secondary">Test API</button>
+        <button id="btnClear" class="btn">Clear</button>
+      </div>
+
+      <div id="loginMsg" class="msg"></div>
+    </section>
+
+    <section id="appCard" class="card hidden">
+      <div class="admin-top">
+        <h2>Dashboard</h2>
+        <div class="actions">
+          <button id="btnRefresh" class="btn">Refresh</button>
+          <button id="btnLogout" class="btn danger">Logout</button>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" data-tab="settings">Settings</button>
+        <button class="tab" data-tab="users">Users</button>
+        <button class="tab" data-tab="feedback">Feedback</button>
+        <button class="tab" data-tab="categories">Categories</button>
+        <button class="tab" data-tab="products">Products</button>
+      </div>
+
+      <div class="tabpanes">
+        <div class="pane active" id="pane-settings">
+          <div class="grid2">
+            <div class="card inner">
+              <h3>WhatsApp Number</h3>
+              <p class="muted">This number will be used for customer checkout message.</p>
+              <label class="field">
+                <span>Number</span>
+                <input id="whatsappInput" type="text" placeholder="+97798XXXXXXXX"/>
+              </label>
+              <div class="actions">
+                <button id="btnSaveWhatsapp" class="btn primary">Save WhatsApp</button>
+              </div>
+              <div id="whatsappMsg" class="msg"></div>
+            </div>
+
+            <div class="card inner">
+              <h3>eSewa QR</h3>
+              <p class="muted">Upload QR image. Customers will see it on checkout page.</p>
+              <div class="qrbox">
+                <img id="qrPreview" alt="eSewa QR preview"/>
+                <div class="muted" id="qrHint">No QR uploaded yet.</div>
+              </div>
+              <label class="field">
+                <span>Upload image</span>
+                <input id="qrFile" type="file" accept="image/*"/>
+              </label>
+              <div class="actions">
+                <button id="btnUploadQr" class="btn primary">Upload QR</button>
+              </div>
+              <div id="qrMsg" class="msg"></div>
+            </div>
+
+            <div class="card inner" id="totpCard">
+              <h3>Admin 2FA (Authenticator)</h3>
+              <p class="muted">Scan the QR code with your authenticator app, then enter the 6-digit code to confirm.</p>
+              <div class="muted" id="totpStatus">Status: unknown</div>
+              <div class="qrbox" style="margin-top:10px;">
+                <img id="totpQr" alt="2FA QR code" style="display:none"/>
+                <div class="muted" id="totpHint">Click "Start setup" to generate a QR.</div>
+              </div>
+              <label class="field">
+                <span>Secret (manual entry)</span>
+                <input id="totpSecret" type="text" readonly />
+              </label>
+              <label class="field">
+                <span>Verification code</span>
+                <input id="totpCode" type="text" inputmode="numeric" placeholder="123456" />
+              </label>
+              <div class="actions">
+                <button id="btnTotpStart" class="btn">Start setup</button>
+                <button id="btnTotpVerify" class="btn primary">Verify & Enable</button>
+              </div>
+              <div id="totpMsg" class="msg"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pane" id="pane-users">
+          <div class="pane-head">
+            <div style="display:flex; align-items:flex-end; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+  <div>
+    <h3>Registered Users</h3>
+    <p class="muted">List of users (admin can view).</p>
+  </div>
+  <div class="actions" style="padding:0;">
+    <button id="btnUsersExport" class="btn">Export CSV</button>
+  </div>
+</div>
+</div>
+          <div class="tablewrap">
+            <table class="table" id="usersTable">
+              <thead>
+                <tr><th>ID</th><th>Name</th><th>Email</th><th>WhatsApp</th><th>Role</th><th>Created</th><th>Actions</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div id="usersMsg" class="msg"></div>
+
+          <div class="card inner" style="margin-top:14px;">
+            <h3 style="margin-top:0;">Create User</h3>
+            <p class="muted">Create a new user account from admin.</p>
+
+            <div class="grid2">
+              <label class="field">
+                <span>Name</span>
+                <input id="newUserName" type="text" placeholder="Full name" />
+              </label>
+
+              <label class="field">
+                <span>Email</span>
+                <input id="newUserEmail" type="email" placeholder="user@example.com" />
+              </label>
+
+              <label class="field">
+                <span>Password</span>
+                <input id="newUserPassword" type="password" placeholder="••••••••" />
+              </label>
+
+              <label class="field">
+                <span>Role</span>
+                <select id="newUserRole">
+                  <option value="user" selected>User</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span>Phone (optional)</span>
+                <input id="newUserPhone" type="text" placeholder="98XXXXXXXX" />
+              </label>
+
+              <label class="field">
+                <span>WhatsApp (optional)</span>
+                <input id="newUserWhatsapp" type="text" placeholder="97798XXXXXXXX" />
+              </label>
+            </div>
+
+            <div class="actions">
+              <button id="btnCreateUser" class="btn primary">Create user</button>
+            </div>
+            <div id="createUserMsg" class="msg"></div>
+          </div>
+        </div>
+
+        <div class="pane" id="pane-feedback">
+          <div class="pane-head">
+            <div style="display:flex; align-items:flex-end; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+              <div>
+                <h3>Customer Feedback</h3>
+                <p class="muted">Review, approve, reject, or delete feedback.</p>
+              </div>
+              <div class="actions" style="padding:0;">
+                <button id="btnFbRefresh" class="btn">Refresh</button>
+                <button id="btnFbExport" class="btn">Export CSV</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card inner" style="margin-bottom:12px;">
+            <div class="grid2" style="margin-top:0;">
+              <label class="field">
+                <span>Status</span>
+                <select id="fbStatus">
+                  <option value="all">All</option>
+                  <option value="pending">Pending</option>
+                  <option value="approved">Approved</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span>Search</span>
+                <input id="fbSearch" placeholder="Search name, email, or message"/>
+              </label>
+            </div>
+
+            <div class="actions" style="justify-content:space-between; margin-top:10px;">
+              <div class="muted" id="fbMeta" style="font-size:13px;"></div>
+              <div style="display:flex; gap:8px; align-items:center;">
+                <button id="fbPrev" class="btn">◀ Prev</button>
+                <button id="fbNext" class="btn">Next ▶</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="tablewrap">
+            <table class="table" id="fbTable">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>User</th>
+                  <th>Rating</th>
+                  <th>Message</th>
+                  <th>Status</th>
+                  <th>Created</th>
+                  <th style="min-width:210px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div id="fbMsg" class="msg"></div>
+        </div>
+
+        <div class="pane" id="pane-categories">
+          <div class="pane-head">
+            <div style="display:flex; align-items:flex-end; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+              <div>
+                <h3>Categories</h3>
+                <p class="muted">Manage category pills shown on the site.</p>
+              </div>
+              <div class="actions" style="padding:0;">
+                <button id="btnCatRefresh" class="btn">Refresh</button>
+                <button id="btnCatNew" class="btn primary">+ Add Category</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card inner hidden" id="catEditor" style="margin-bottom:12px;">
+            <h3 id="catEditorTitle" style="margin-top:0;">Add category</h3>
+            <div class="grid2">
+              <label class="field">
+                <span>ID (slug)</span>
+                <input id="catId" type="text" placeholder="netflix" />
+              </label>
+              <label class="field">
+                <span>Name</span>
+                <input id="catName" type="text" placeholder="Netflix" />
+              </label>
+              <label class="field">
+                <span>Tagline</span>
+                <input id="catTag" type="text" placeholder="Plans and profiles" />
+              </label>
+              <label class="field">
+                <span>Icon</span>
+                <input id="catIcon" type="text" placeholder="NF" />
+              </label>
+            </div>
+            <div class="actions">
+              <button id="btnCatSave" class="btn primary">Save category</button>
+              <button id="btnCatCancel" class="btn">Cancel</button>
+            </div>
+          </div>
+
+          <div class="tablewrap">
+            <table class="table" id="catTable">
+              <thead>
+                <tr><th>ID</th><th>Name</th><th>Tag</th><th>Icon</th><th>Actions</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div id="catMsg" class="msg"></div>
+        </div>
+
+        <div class="pane" id="pane-products">
+          <div class="card inner">
+            <div class="admin-top" style="padding:0; margin-bottom:10px;">
+              <h3 style="margin:0;">Products</h3>
+              <div class="actions" style="padding:0;">
+                <button id="btnProdRefresh" class="btn">Refresh</button>
+                <button id="btnProdNew" class="btn primary">+ Add Product</button>
+              </div>
+            </div>
+
+            
+            <div class="grid2" style="margin-top:10px;">
+              <div class="field">
+                <span>Search</span>
+                <input id="prodSearch" placeholder="Search by name or note (e.g., PUBG, Netflix, Steam)" />
+              </div>
+
+              <div class="field">
+                <span>Category</span>
+                <select id="prodCategory">
+                  <option value="">All categories</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <span>Min Price (NPR)</span>
+                <input id="prodMinPrice" type="number" min="0" step="1" placeholder="0" />
+              </div>
+
+              <div class="field">
+                <span>Max Price (NPR)</span>
+                <input id="prodMaxPrice" type="number" min="0" step="1" placeholder="99999" />
+              </div>
+
+              <div class="field" style="grid-column:1/-1;">
+                <span>Sort</span>
+                <select id="prodSort">
+                  <option value="name_asc">Name (A → Z)</option>
+                  <option value="name_desc">Name (Z → A)</option>
+                  <option value="price_asc">Price (Low → High)</option>
+                  <option value="price_desc">Price (High → Low)</option>
+                  <option value="newest">Newest first</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="actions" style="justify-content:flex-start;">
+
+              <button id="btnProdSearch" class="btn">Search</button>
+              <button id="btnProdClear" class="btn">Clear filters</button>
+            </div>
+
+            <div class="tablewrap">
+              <table class="table" id="prodTable">
+                <thead>
+                  <tr>
+                    <th style="min-width:120px;">ID</th>
+                    <th style="min-width:220px;">Name</th>
+                    <th style="min-width:110px;">Category</th>
+                    <th style="min-width:110px;">Price (NPR)</th>
+                    <th style="min-width:240px;">Image</th>
+                    <th style="min-width:240px;">Note</th>
+                    <th style="min-width:180px;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+
+            
+            <div class="actions" id="prodPager" style="justify-content:space-between; gap:10px; margin-top:10px; flex-wrap:wrap;">
+              <div class="actions" style="justify-content:flex-start; gap:8px; padding:0;">
+                <button id="btnProdPrev" class="btn">◀ Prev</button>
+                <button id="btnProdNext" class="btn">Next ▶</button>
+                <span id="prodPageInfo" class="muted"></span>
+              </div>
+              <div class="actions" style="justify-content:flex-end; gap:8px; padding:0;">
+                <label class="field" style="display:flex; align-items:center; gap:8px; margin:0;">
+                  <span class="muted" style="min-width:70px;">Page size</span>
+                  <select id="prodPageSize" style="height:40px;">
+                    <option value="10">10</option>
+                    <option value="20" selected>20</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                  </select>
+                </label>
+                <span id="prodTotalInfo" class="muted"></span>
+              </div>
+            </div>
+
+<div id="prodMsg" class="msg"></div>
+
+            <div id="prodEditor" class="card inner hidden" style="margin-top:14px;">
+              <h3 id="prodEditorTitle" style="margin-top:0;">Add product</h3>
+
+              <div class="grid2">
+                <div class="field">
+                  <span>ID (leave empty to auto-generate)</span>
+                  <input id="editId" placeholder="e.g. pubg-660" />
+                </div>
+                <div class="field">
+                  <span>Category ID</span>
+                  <select id="editCategory"><option value="">Select category</option></select>
+                </div>
+
+                <div class="field">
+                  <span>Name</span>
+                  <input id="editName" placeholder="Product name" />
+                </div>
+                <div class="field">
+                  <span>Price (NPR)</span>
+                  <input id="editPrice" type="number" min="0" step="1" placeholder="1350" />
+                </div>
+
+                <div class="field" style="grid-column:1/-1;">
+                  <span>Image URL (optional) — can be /uploads/... or assets/...</span>
+                  <input id="editImage" placeholder="e.g. assets/product-1.svg or http://localhost:4000/uploads/..." />
+                </div>
+
+                <div class="field" style="grid-column:1/-1;">
+                  <span>Upload image (optional)</span>
+                  <input id="editImageFile" type="file" accept="image/*" />
+                </div>
+
+                <div class="field" style="grid-column:1/-1;">
+                  <span>Note (optional)</span>
+                  <input id="editNote" placeholder="Short note (e.g., Instant delivery • UID)" />
+                </div>
+              </div>
+
+              <div class="actions">
+                <button id="btnProdSave" class="btn primary">Save</button>
+                <button id="btnProdCancel" class="btn">Cancel</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+</div>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="js/admin.js"></script>
+  <script src="js/auth-gate.js"></script>
+  <script src="js/fix-runtime.js"></script>
+  <script src="js/admin-visibility.js"></script>
+  <script src="js/dev-api-override.js"></script>
+<script src="js/auto-init.js"></script>
+  <script src="js/google-nav.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var apiInput = document.querySelector('#apiBase');
+  if (apiInput && (!apiInput.value || apiInput.value === 'window.API_BASE')) {
+    apiInput.value = window.API_BASE; // keep in sync with runtime
+  }
+  var testBtn = document.querySelector('#btnApiTest');
+  if (testBtn) {
+    testBtn.addEventListener('click', async function() {
+      const base = (document.querySelector('#apiBase')?.value || window.API_BASE).replace(/\/$/, '');
+      const url = base + '/api/health';
+      try {
+        const res = await fetch(url, { cache: 'no-store' });
+        const ok = res.ok ? 'OK' : ('HTTP ' + res.status);
+        alert('Ping ' + url + ' → ' + ok);
+      } catch (e) {
+        alert('Ping ' + url + ' failed: ' + e.message);
+      }
+    });
+  }
+});
+</script>
+
+</body>
+</html>
+
+

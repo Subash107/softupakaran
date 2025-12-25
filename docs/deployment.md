@@ -12,10 +12,10 @@
 \- The frontend and backend both seed categories/pills, so keep them aligned by running the verifier before deployment:
 
 ```bash
-node scripts/verify-categories-sync.js
+node infrastructure/scripts/verify-categories-sync.js
 ```
 
 \- The verifier checks:
-  - Every entry in `frontend/js/app.js`’s `DEFAULT_CATEGORIES`, `CATEGORY_ORDER`, and `CATEGORY_NOTES` matches the rows seeded by `backend/scripts/update-sample-products.js`.
+  - Every entry in `services/frontend/js/app.js`’s `DEFAULT_CATEGORIES`, `CATEGORY_ORDER`, and `CATEGORY_NOTES` matches the rows seeded by `services/backend/scripts/update-sample-products.js`.
   - Additional categories aren’t silently added to one side without the other.
 \- Failures print the mismatch details and exit with status `1`, making it easy to wire into CI or pre-release scripts.

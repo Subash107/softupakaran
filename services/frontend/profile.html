@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta name="api-base" content="https://softupakaran-backend.onrender.com">
+<script src="js/env.js"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SoftUpakaran • Profile</title>
+  <meta name="description" content="SoftUpakaran profile: register/login and manage your session." />
+  <link rel="icon" type="image/svg+xml" href="assets/logo.svg"/>
+  <link href="styles.css" rel="stylesheet">
+  <style>
+    /* Small page-specific helpers (keeps existing theme) */
+    .profileWrap{max-width:1100px;margin:34px auto;padding:0 18px}
+    .profileGrid{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}
+    @media(max-width:980px){.profileGrid{grid-template-columns:1fr}}
+    .panelCard{background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:18px;box-shadow:0 18px 50px rgba(0,0,0,.35)}
+    .panelTitle{font-size:20px;font-weight:800;margin:0 0 10px}
+    .muted{opacity:.78}
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media(max-width:700px){.row2{grid-template-columns:1fr}}
+    .inp{width:100%;padding:12px 12px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.35);color:#fff;outline:none}
+    .btnRow{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    .msg{margin-top:10px;white-space:pre-wrap}
+    .ok{color:#7CFFB2}
+    .bad{color:#FF7C7C}
+    pre{margin:10px 0 0;padding:12px;border-radius:14px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08);overflow:auto}
+  </style>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+
+<body>
+  <!-- Keep the same site navbar -->
+  <div id="siteNav"></div>
+
+  <main class="profileWrap">
+    <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-end;margin-bottom:16px;flex-wrap:wrap">
+      <div>
+        <h1 style="margin:0;font-size:30px;letter-spacing:.2px">Profile</h1>
+              </div>
+    </div>
+
+    <div class="profileGrid">
+      <section class="panelCard">
+        <h2 class="panelTitle">Account</h2>
+        <div id="status" class="muted">Checking session…</div>
+        <div id="meDetails" class="muted" style="display:none;margin-top:10px"></div>
+
+        <!-- Feedback (shows after user logs in) -->
+        <div id="feedbackPanel" style="display:none;margin-top:16px">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap">
+            <h3 class="panelTitle" style="font-size:16px;margin:0">User feedback</h3>
+            <div class="muted" style="font-size:12px">Your feedback will appear on Home page testimonials.</div>
+          </div>
+          <div style="height:10px"></div>
+          <div class="row2">
+            <select id="fbRating" class="inp" aria-label="Rating">
+              <option value="">Rating (optional)</option>
+              <option value="5">★★★★★ (5)</option>
+              <option value="4">★★★★☆ (4)</option>
+              <option value="3">★★★☆☆ (3)</option>
+              <option value="2">★★☆☆☆ (2)</option>
+              <option value="1">★☆☆☆☆ (1)</option>
+            </select>
+            <input id="fbTitle" class="inp" placeholder="Short title (optional)" maxlength="60" />
+          </div>
+          <div style="height:10px"></div>
+          <textarea id="fbMessage" class="inp" rows="4" placeholder="Write your feedback…" style="resize:vertical;min-height:96px"></textarea>
+          <div class="btnRow">
+            <button id="btnSendFeedback" class="btn primary" type="button">Submit feedback</button>
+          </div>
+          <div id="fbMsg" class="msg"></div>
+        </div>
+
+        <div class="btnRow">
+          <button id="btnLogout" class="btn" type="button">Logout</button>
+                    <a class="btn" href="index.html" id="homeLink" style="text-decoration:none">Back to Home</a>
+<a class="btn" href="admin.html" id="adminLink" style="text-decoration:none">Admin</a>
+        </div>
+        <pre id="meBox" style="display:none"></pre>
+        <div id="meMsg" class="msg muted"></div>
+      </section>
+
+      <section id="authPanel" class="panelCard">
+        <div id="signInSection" style="display:none">
+          <h2 class="panelTitle">Sign in</h2>
+          <input id="loginEmail" class="inp" placeholder="Email" autocomplete="email" />
+          <div style="height:10px"></div>
+          <input id="loginPassword" class="inp" type="password" placeholder="Password" autocomplete="current-password" />
+          <div class="btnRow">
+            <button id="btnLogin" class="btn primary" type="button">Sign in</button>
+          </div>
+          <div id="loginMsg" class="msg"></div>
+          <div style="height:10px"></div>
+          <div class="muted" style="font-size:13px;margin:6px 0 10px">Or continue with</div>
+          <div id="googleSignInBtn"></div>
+          <div id="googleMsg" class="msg"></div>
+        </div>
+
+        <div style="height:16px"></div>
+        <hr style="border:none;border-top:1px solid rgba(255,255,255,.08);margin:0 0 16px" />
+
+        <h2 class="panelTitle">Create account</h2>
+        <div class="row2">
+          <input id="regName" class="inp" placeholder="Full name" autocomplete="name" />
+          <input id="regWhatsapp" class="inp" placeholder="WhatsApp (optional)" />
+        </div>
+        <div style="height:10px"></div>
+        <input id="regEmail" class="inp" placeholder="Email" autocomplete="email" />
+        <div style="height:10px"></div>
+        <input id="regPassword" class="inp" type="password" placeholder="Password" autocomplete="new-password" />
+        <div class="btnRow">
+          <button id="btnRegister" class="btn primary" type="button">Create account</button>
+        </div>
+        <div id="regMsg" class="msg"></div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Shared scripts -->
+  <script src="js/app.js"></script>
+  <script src="js/auth-gate.js"></script>
+  <script src="js/auth.js"></script>
+
+  <script>
+    // Render navbar from js/app.js if present; otherwise, keep page working.
+    (function(){
+      try{
+        if (typeof window.renderNavbar === 'function') {
+          window.renderNavbar();
+        } else if (typeof window.initNavbar === 'function') {
+          window.initNavbar();
+        }
+      }catch(e){}
+    })();
+
+    const statusEl = document.getElementById('status');
+    const meBox = document.getElementById('meBox');
+    const meMsg = document.getElementById('meMsg');
+    const meDetails = document.getElementById('meDetails');
+    const authPanel = document.getElementById('authPanel');
+    const feedbackPanel = document.getElementById('feedbackPanel');
+    const fbMsg = document.getElementById('fbMsg');
+    const isDebug = /[?&]debug=1(?:&|$)/.test(location.search);
+
+    let currentMe = null;
+
+    function escapeHtml(s){
+      return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    function renderMeDetails(me){
+      if(!me) { meDetails.style.display = 'none'; meDetails.innerHTML = ''; return; }
+      const rows = [
+        ['Name', me.name],
+        ['Email', me.email],
+        ['WhatsApp', me.whatsapp || me.phone || ''],
+        ['Created', me.created_at || me.createdAt || ''],
+        ['Updated', me.updated_at || me.updatedAt || '']
+      ].filter(r => r[1] !== undefined && r[1] !== null && String(r[1]).trim() !== '');
+      meDetails.innerHTML = rows.map(([k,v]) =>
+        `<div style="display:flex;gap:12px;align-items:baseline;margin:4px 0">
+           <div style="min-width:86px;opacity:.75">${escapeHtml(k)}</div>
+           <div style="font-weight:700">${escapeHtml(v)}</div>
+         </div>`
+      ).join('');
+      meDetails.style.display = 'block';
+    }
+
+    function setAuthedUI(isAuthed, me){
+      // Hide the marked blocks once user is signed in (registration returns token, so same logic).
+      if(authPanel) authPanel.style.display = isAuthed ? 'none' : '';
+      // Hide raw JSON box (marked) after sign-in; allow debug=1 to see it.
+      if(meBox) meBox.style.display = (isAuthed && isDebug) ? 'block' : 'none';
+      if(feedbackPanel) feedbackPanel.style.display = isAuthed ? '' : 'none';
+      if(isAuthed){
+        renderMeDetails(me);
+      }else{
+        renderMeDetails(null);
+      }
+    }
+
+
+    function setStatus(text, ok){
+      statusEl.textContent = text;
+      statusEl.className = ok === undefined ? 'muted' : (ok ? 'ok' : 'bad');
+    }
+
+    function showMsg(el, text, ok){
+      el.textContent = text || '';
+      el.className = 'msg ' + (ok === undefined ? 'muted' : (ok ? 'ok' : 'bad'));
+    }
+
+
+    async function loadMe(){
+      try{
+        setStatus('Loading profile…');
+        const me = await Auth.me();
+        currentMe = me;
+        if(!me){
+          meBox.textContent = '';
+          setStatus('Not signed in.', false);
+          setAuthedUI(false, null);
+          return;
+        }
+        setStatus('Signed in as ' + (me.email || me.name || 'user'), true);
+        renderMeDetails(me);
+        // Keep raw JSON for debug only
+        meBox.textContent = JSON.stringify(me, null, 2);
+        setAuthedUI(true, me);
+      }catch(e){
+        currentMe = null;
+        meBox.textContent = '';
+        setStatus('Not signed in.', false);
+        setAuthedUI(false, null);
+      }
+    }
+
+    async function submitFeedback(){
+      const btn = document.getElementById('btnSendFeedback');
+      if(!btn) return;
+      btn.disabled = true;
+      showMsg(fbMsg, 'Submitting feedback…');
+      try{
+        const token = localStorage.getItem('token');
+        if(!token) throw new Error('Please sign in first.');
+
+        const rating = document.getElementById('fbRating')?.value || '';
+        const title = document.getElementById('fbTitle')?.value || '';
+        const message = (document.getElementById('fbMessage')?.value || '').trim();
+        if(!message) throw new Error('Please write a feedback message.');
+
+        // Merge title into message nicely (keeps DB simple)
+        const finalMessage = title.trim() ? `${title.trim()} — ${message}` : message;
+
+        const res = await fetch(Auth.getApiBase() + '/api/feedback', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token,
+          },
+          body: JSON.stringify({
+            name: currentMe?.name || '',
+            email: currentMe?.email || '',
+            rating: rating || null,
+            message: finalMessage,
+          })
+        });
+
+        if(!res.ok){
+          const t = await res.text();
+          throw new Error(t || 'Failed to submit feedback');
+        }
+
+        document.getElementById('fbMessage').value = '';
+        document.getElementById('fbTitle').value = '';
+        document.getElementById('fbRating').value = '';
+        showMsg(fbMsg, 'Thanks! Your feedback is published on the Home page ✅', true);
+      }catch(e){
+        showMsg(fbMsg, 'Feedback failed: ' + (e.message || e), false);
+      }finally{
+        btn.disabled = false;
+      }
+    }
+
+    // Feedback button
+    document.getElementById('btnSendFeedback')?.addEventListener('click', submitFeedback);
+
+    document.getElementById('btnLogin').addEventListener('click', async function(){
+      const btn = this;
+      btn.disabled = true;
+      showMsg(document.getElementById('loginMsg'), 'Signing in…');
+      try{
+        const email = document.getElementById('loginEmail').value.trim();
+        const password = document.getElementById('loginPassword').value;
+        await Auth.login(email, password);
+        showMsg(document.getElementById('loginMsg'), 'Login success ✅', true);
+        document.dispatchEvent(new Event('auth:changed'));
+        await loadMe();
+      }catch(e){
+        showMsg(document.getElementById('loginMsg'), 'Login failed: ' + (e.message || e), false);
+      }finally{
+        btn.disabled = false;
+      }
+    });
+
+    document.getElementById('btnRegister').addEventListener('click', async function(){
+      const btn = this;
+      btn.disabled = true;
+      showMsg(document.getElementById('regMsg'), 'Creating account…');
+      try{
+        const name = document.getElementById('regName').value.trim();
+        const email = document.getElementById('regEmail').value.trim();
+        const password = document.getElementById('regPassword').value;
+        const whatsapp = document.getElementById('regWhatsapp').value.trim();
+        await Auth.register({ name, email, password, whatsapp });
+        showMsg(document.getElementById('regMsg'), 'Account created & signed in ✅', true);
+        document.dispatchEvent(new Event('auth:changed'));
+        await loadMe();
+        // clear form
+        document.getElementById('regPassword').value = '';
+
+      }catch(e){
+        showMsg(document.getElementById('regMsg'), 'Register failed: ' + (e.message || e), false);
+      }finally{
+        btn.disabled = false;
+      }
+    });
+
+    document.getElementById('btnLogout').addEventListener('click', async function(){
+      Auth.clearToken();
+      showMsg(meMsg, 'Logged out.', true);
+      document.dispatchEvent(new Event('auth:changed'));
+      await loadMe();
+    });
+document.addEventListener('auth:changed', loadMe);
+
+    initGoogleLogin();
+    loadMe();
+  </script>
+  <script src="js/fix-runtime.js"></script>
+  <script src="js/admin-visibility.js"></script>
+  <script src="js/dev-api-override.js"></script>
+<script src="js/auto-init.js"></script>
+  <script src="js/google-nav.js"></script>
+</body>
+</html>
+
+

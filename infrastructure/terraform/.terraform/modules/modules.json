@@ -1,0 +1,1 @@
+{"Modules":[{"Key":"","Source":"","Dir":"."},{"Key":"backend_service","Source":"./modules/web-service","Dir":"modules/web-service"},{"Key":"frontend_service","Source":"./modules/web-service","Dir":"modules/web-service"}]}

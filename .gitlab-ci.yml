@@ -20,7 +20,7 @@ pages:
   image: alpine:3.19
   script:
     - mkdir -p public
-    - cp -r frontend/* public/
+    - cp -r services/frontend/* public/
   artifacts:
     paths:
       - public
