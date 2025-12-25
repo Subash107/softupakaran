@@ -108,6 +108,94 @@ const SAMPLE_TOOLS = [
   { id: "sample-elementor", name: "Elementor Pro", category: "wp-plugins", price: 299, img: "https://store.ilovemithila.com/wp-content/uploads/2025/05/Elementor_Pro_Package_cleanup.png", note: "Visual page builder" }
 ];
 
+const LOCALES = {
+  en: {
+    heroTagline: "Digital Delivery",
+    trendingTitle: "Trending Subscriptions",
+    trendingSubtitle: "Hot plans curated for Nepal.",
+    addButton: "Add",
+    cartEmptyTitle: "Your cart is empty",
+    cartEmptyMeta: "Add some products to continue.",
+    payWhatsApp: "Pay via WhatsApp",
+    payEsewa: "Pay via eSewa QR",
+    demoOrder: "Place demo order",
+    demoNotice: "Demo checkout only (no payment). Replace later with a gateway.",
+    availabilityPrefix: "Availability:",
+    cartTitle: "Your Cart",
+    checkoutTitle: "Checkout",
+    langLabel: "Language"
+  },
+  ne: {
+    heroTagline: "डिजिटल डेलिभरी",
+    trendingTitle: "प्रचलित सदस्यताहरू",
+    trendingSubtitle: "नेपालका लागि क्युरेट गरिएका हॉट योजना",
+    addButton: "थप्नुहोस्",
+    cartEmptyTitle: "तपाईंको कार्ट खाली छ",
+    cartEmptyMeta: "किनमेलका लागि केही वस्तु थप्नुहोस्।",
+    payWhatsApp: "व्हाट्सएपबाट भुक्तानी",
+    payEsewa: "eSewa QR बाट भुक्तानी",
+    demoOrder: "डेमो अर्डर पठाउनुहोस्",
+    demoNotice: "डेमो चेकआउट मात्र (भुक्तानी छैन)। पछि गेटवे राख्नुहोस्।",
+    availabilityPrefix: "उपलब्धता:",
+    cartTitle: "तपाईंको कार्ट",
+    checkoutTitle: "चेकआउट",
+    langLabel: "भाषा"
+  }
+};
+let currentLocale = localStorage.getItem("softup-locale") || "en";
+let demoOrderStatus = null;
+
+function t(key, fallback) {
+  return (LOCALES[currentLocale] && LOCALES[currentLocale][key]) || LOCALES.en[key] || fallback || "";
+}
+
+function setLocale(locale) {
+  if (!LOCALES[locale]) locale = "en";
+  currentLocale = locale;
+  localStorage.setItem("softup-locale", locale);
+  document.documentElement.lang = locale;
+  document.querySelectorAll("[data-locale-text]").forEach((el) => {
+    const key = el.getAttribute("data-locale-text");
+    if (key) el.textContent = t(key, el.textContent);
+  });
+  document.querySelectorAll("[data-lang-switch] button").forEach((btn) => {
+    btn.classList.toggle("active", btn.getAttribute("data-lang") === locale);
+  });
+  refreshHomeSections();
+}
+
+function formatUSD(value) {
+  if (value === undefined || value === null || Number.isNaN(Number(value))) return "";
+  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value);
+}
+
+function formatPriceLine(product) {
+  if (!product) return "";
+  const npr = formatNPR(product.price || 0);
+  const usd = formatUSD(product.price_usd);
+  return usd ? `${npr} • ${usd}` : npr;
+}
+
+function localeNote(product) {
+  if (currentLocale === "ne" && product.note_ne) return product.note_ne;
+  return product.note || "";
+}
+
+const AVAILABILITY_TRANSLATIONS = {
+  "in stock": { en: "In stock", ne: "स्टकमा" },
+  limited: { en: "Limited", ne: "सीमित" },
+  "pre-order": { en: "Pre-order", ne: "पूर्व-अर्डर" },
+  "promo stock": { en: "Promo stock", ne: "प्रमोशनल स्टक" }
+};
+
+function availabilityLabel(status) {
+  if (!status) return "";
+  const key = String(status).toLowerCase();
+  return AVAILABILITY_TRANSLATIONS[key]
+    ? (AVAILABILITY_TRANSLATIONS[key][currentLocale] || AVAILABILITY_TRANSLATIONS[key].en)
+    : status;
+}
+
 const LAZY_IMAGE_PLACEHOLDER = "assets/product-1.svg";
 const LAZY_IMAGE_MARGIN = "140px";
 
@@ -336,10 +424,14 @@ function productCard(p){
     </a>
     <div class="pad">
       <p class="cardTitle">${p.name}</p>
-      <p class="cardMeta">${p.note}</p>
+      <p class="cardMeta">${localeNote(p)}</p>
       <div class="price">
-        <span>${formatNPR(p.price)}</span>
-        <button class="btn primary" data-add="${p.id}">Add</button>
+        <div>
+          <strong>${formatPriceLine(p)}</strong>
+          ${p.tier ? `<small class="cardMeta" style="margin-top:3px">${p.tier}</small>` : ""}
+          ${p.availability ? `<small class="small">${t("availabilityPrefix")} ${availabilityLabel(p.availability)}</small>` : ""}
+        </div>
+        <button class="btn primary" data-add="${p.id}">${t("addButton", "Add")}</button>
       </div>
     </div>
   </div>
@@ -596,14 +688,20 @@ function renderCart(){
   const body = backdrop.querySelector("[data-cart-body]");
   const footer = backdrop.querySelector("[data-cart-footer]");
   const lines = cartLines();
+  const statusHtml = demoOrderStatus
+    ? `<div class="notice demo-order-status ${demoOrderStatus.ok ? "success" : "error"}" data-demo-status>${demoOrderStatus.message}</div>`
+    : "";
 
   if(!lines.length){
     body.innerHTML = `<div class="card"><div class="pad">
-      <p class="cardTitle">Your cart is empty</p>
-      <p class="cardMeta">Add some products to continue.</p>
+      <p class="cardTitle">${t("cartEmptyTitle", "Your cart is empty")}</p>
+      <p class="cardMeta">${t("cartEmptyMeta", "Add some products to continue.")}</p>
     </div></div>`;
-    footer.innerHTML = `<div class="notice">Tip: click Add on any product.</div>
-      <button class="btn primary" data-cart-close>Continue shopping</button>`;
+    footer.innerHTML = `
+      ${statusHtml}
+      <div class="notice">Tip: click ${t("addButton", "Add")} on any product.</div>
+      <button class="btn primary" data-cart-close>Continue shopping</button>
+    `;
     footer.querySelector("[data-cart-close]")?.addEventListener("click", closeCart);
     updateCartCount();
     return;
@@ -645,12 +743,17 @@ function renderCart(){
   initLazyImages(body);
 
   footer.innerHTML = `
+    ${statusHtml}
     <div>
       <div class="tot">Total: ${formatNPR(cartTotal())}</div>
       <div class="notice">Demo checkout only (no payment). Replace later with real gateway.</div>
     </div>
+    <div>
+      <div class="notice">${t("demoNotice")}</div>
+    </div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end">
       <button class="btn" data-clear>Clear</button>
+      <button class="btn secondary" data-demo-order>${t("demoOrder")}</button>
       <button class="btn primary" data-checkout>Checkout</button>
     </div>
   `;
@@ -676,7 +779,10 @@ function renderCart(){
     window.open(url, "_blank");
   });
 
-footer.querySelector("[data-clear]")?.addEventListener("click", () => { saveCart([]); renderCart(); });
+  footer.querySelector("[data-clear]")?.addEventListener("click", () => { saveCart([]); renderCart(); });
+  footer.querySelector("[data-demo-order]")?.addEventListener("click", async () => {
+    await triggerDemoOrder();
+  });
   footer.querySelector("[data-checkout]")?.addEventListener("click", () => {
     openPayModal();
   });
@@ -814,7 +920,9 @@ function wireSearch(){
 async function sendOrderToBackend(extraNote){
   try{
     const lines = cartLines();
-    if(!lines || !lines.length) return;
+    if(!lines || !lines.length) {
+      return { ok: false, error: "Cart is empty" };
+    }
 
     const total = cartTotal();
     const payload = {
@@ -830,14 +938,47 @@ async function sendOrderToBackend(extraNote){
     };
 
     // If your backend is on another host/port, change this URL.
-    await fetch(`${API_BASE}/api/orders`, {
+    const res = await fetch(`${API_BASE}/api/orders`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     });
+    const text = await res.text().catch(() => "");
+    let data = null;
+    try{
+      data = text ? JSON.parse(text) : null;
+    }catch(_){}
+
+    if(!res.ok){
+      const error = (data && (data.error || data.message)) ? (data.error || data.message) : (text || res.statusText);
+      return { ok: false, error };
+    }
+    return { ok: true, data: data || {} };
   }catch(err){
     console.error("Failed to send order to backend:", err);
+    return { ok: false, error: err.message || "Request failed" };
   }
+}
+
+async function triggerDemoOrder(){
+  const result = await sendOrderToBackend("Demo order triggered from storefront");
+  if(!result || !result.ok){
+    demoOrderStatus = {
+      ok: false,
+      message: escapeHtml(result?.error || "Demo order failed. Check console.")
+    };
+    renderCart();
+    return result;
+  }
+  const orderId = (result.data && (result.data.id ?? result.data.orderId)) || result.id || "unknown";
+  const safeId = escapeHtml(String(orderId));
+  const logPath = escapeHtml(`services/backend/logs/order-${safeId}.json`);
+  demoOrderStatus = {
+    ok: true,
+    message: `Demo order #${safeId} recorded. Backend log: ${logPath}`
+  };
+  renderCart();
+  return result;
 }
 
 
@@ -1064,6 +1205,13 @@ async function init(){
   document.querySelectorAll("[data-go-popular]").forEach(b => b.addEventListener("click", () => {
     document.querySelector("#popular")?.scrollIntoView({behavior:"smooth"});
   }));
+  document.querySelectorAll("[data-lang-switch] button").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const lang = btn.getAttribute("data-lang") || "en";
+      setLocale(lang);
+    });
+  });
+  setLocale(currentLocale);
 }
 
 document.addEventListener("DOMContentLoaded", init);

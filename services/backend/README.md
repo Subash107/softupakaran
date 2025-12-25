@@ -99,3 +99,20 @@ curl -X POST http://localhost:4000/api/admin/settings/esewa-qr ^
 
 Then customers can read it from:
 `GET /api/public/settings`
+
+---
+
+## Localization & real-tiered catalog
+
+- The catalog now includes localized Nepali notes, pricing tiers (NPR + USD), availability flags, and demo Netflix bundles seeded via `scripts/update-sample-products.js`. Run `node scripts/update-sample-products.js` after editing the list to refresh the database.
+
+## Demo order & logging
+
+- Every `POST /api/orders` now writes a JSON log to `./logs/order-<id>.json` so you can trace demo checkouts.  
+- To exercise the order flow from the CLI, run:
+
+```bash
+node scripts/demo-order.js
+```
+
+It posts a ready-made Netflix + bundle order against your local backend and prints the response (good for sharing a quick story in your portfolio).

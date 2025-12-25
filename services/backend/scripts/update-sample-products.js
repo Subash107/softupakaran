@@ -11,14 +11,102 @@ const categories = [
 ];
 
 const products = [
-  { id: "p1", name: "Free Fire 530 Diamonds", category: "freefire", price: 999, img: "assets/product-2.svg", note: "Direct UID - Instant delivery" },
-  { id: "p2", name: "PUBG UC 600 (Global)", category: "pubg", price: 1300, img: "assets/product-1.svg", note: "UID top-up - 5-10 min" },
-  { id: "p3", name: "Google Play Gift Card $10", category: "gift", price: 1550, img: "assets/product-5.svg", note: "US region - Digital code" },
-  { id: "p4", name: "Steam Wallet Code $20", category: "gift", price: 3100, img: "assets/product-3.svg", note: "Global/US - Instant code" },
-  { id: "p5", name: "Netflix Premium (1 Month)", category: "subscriptions", price: 1299, img: "assets/product-4.svg", note: "Shared profile - 4K" },
-  { id: "p6", name: "Spotify Premium (3 Months)", category: "spotify", price: 1199, img: "assets/product-3.svg", note: "Activation within 1 hour" },
-  { id: "p7", name: "TikTok Coins 350", category: "social", price: 650, img: "assets/product-7.svg", note: "Nepal payment - Quick delivery" },
-  { id: "p8", name: "Gaming Mouse RGB (Budget)", category: "gears", price: 1499, img: "assets/product-8.svg", note: "2-year warranty - DPI 6400" }
+  {
+    id: "netflix-mobile",
+    name: "Netflix Mobile (1 Month)",
+    category: "netflix",
+    price: 450,
+    price_usd: 3,
+    tier: "Mobile Plan",
+    availability: "In stock",
+    note: "480p • Mobile only • Nepal ready",
+    note_ne: "४८०प • मोबाइल मात्र • नेपाल डेलिभरी",
+    img: "assets/product-2.svg"
+  },
+  {
+    id: "netflix-basic",
+    name: "Netflix Basic (1 Month)",
+    category: "netflix",
+    price: 650,
+    price_usd: 4.5,
+    tier: "Basic Plan",
+    availability: "Limited",
+    note: "720p • 1 screen • Shared profiles",
+    note_ne: "७२०प • १ स्क्रिन • शेयर प्रोफाइल",
+    img: "assets/product-4.svg"
+  },
+  {
+    id: "netflix-standard",
+    name: "Netflix Standard (1 Month)",
+    category: "netflix",
+    price: 1050,
+    price_usd: 7,
+    tier: "Standard Plan",
+    availability: "In stock",
+    note: "1080p • 2 screens • Instant code",
+    note_ne: "१०८०प • २ स्क्रिन • द्रुत डेलिभरी",
+    img: "assets/product-1.svg"
+  },
+  {
+    id: "netflix-premium",
+    name: "Netflix Premium (1 Month)",
+    category: "netflix",
+    price: 1450,
+    price_usd: 9.7,
+    tier: "Premium Plan",
+    availability: "In stock",
+    note: "4K + HDR • 4 screens • Private profile",
+    note_ne: "४के + एचडीआर • ४ स्क्रिन • निजी प्रोफाइल",
+    img: "assets/product-5.svg"
+  },
+  {
+    id: "netflix-premium-3",
+    name: "Premium - 3 Months",
+    category: "subscriptions",
+    price: 4200,
+    price_usd: 28,
+    tier: "Long term savings",
+    availability: "Promo stock",
+    note: "Save more • Delivery within 24h",
+    note_ne: "थोरै भुक्तानी • २४ घण्टामा डेलिभरी",
+    img: "assets/product-3.svg"
+  },
+  {
+    id: "netflix-premium-6",
+    name: "Premium - 6 Months",
+    category: "subscriptions",
+    price: 8200,
+    price_usd: 55,
+    tier: "Long term savings",
+    availability: "Pre-order",
+    note: "Best value • Rs. +280 dependency",
+    note_ne: "सबैभन्दा आर्थिक • रु. +२८० निर्भरता",
+    img: "assets/product-6.svg"
+  },
+  {
+    id: "spotify-premium-3",
+    name: "Spotify Premium (3 Months)",
+    category: "spotify",
+    price: 1199,
+    price_usd: 8,
+    tier: "Music bundle",
+    availability: "In stock",
+    note: "Unlimited downloads • Verified account",
+    note_ne: "असीमित डाउनलोड • पुष्टिदृष्टि",
+    img: "assets/product-2.svg"
+  },
+  {
+    id: "gift-google-play",
+    name: "Google Play Gift Card $10",
+    category: "gift",
+    price: 1550,
+    price_usd: 10,
+    tier: "Gift card",
+    availability: "Global stock",
+    note: "US region • Instant code",
+    note_ne: "यूएस क्षेत्र • तुरुन्त कोड",
+    img: "assets/product-7.svg"
+  }
 ];
 
 db.serialize(() => {

@@ -32,8 +32,12 @@ function initDb() {
         name TEXT NOT NULL,
         category_id TEXT NOT NULL,
         price_npr INTEGER NOT NULL,
-        image TEXT,
+        price_usd INTEGER,
+        tier TEXT,
+        availability TEXT,
         note TEXT,
+        note_ne TEXT,
+        image TEXT,
         FOREIGN KEY (category_id) REFERENCES categories(id)
       )
     `);
@@ -59,6 +63,10 @@ function initDb() {
     ensureColumn("orders", "whatsapp", "TEXT");
     ensureColumn("orders", "raw_cart_json", "TEXT");
     ensureColumn("orders", "source", "TEXT");
+    ensureColumn("products", "price_usd", "INTEGER");
+    ensureColumn("products", "tier", "TEXT");
+    ensureColumn("products", "availability", "TEXT");
+    ensureColumn("products", "note_ne", "TEXT");
 
     // Users & admin
     db.run(`
@@ -116,7 +124,7 @@ function initDb() {
 
       console.log("🌱 Seeding demo categories & products...");
 
-      const categories = [
+    const categories = [
         { id: "freefire", name: "Free Fire Top Up", tag: "Top up diamonds instantly", icon: "🔥" },
         { id: "pubg", name: "PUBG UC", tag: "UC pins & UID top-up", icon: "🎮" },
         { id: "gift", name: "Gift Cards", tag: "Steam, Google Play & more", icon: "🎁" },
@@ -126,7 +134,7 @@ function initDb() {
         { id: "gears", name: "Gaming Gears", tag: "Mice, headsets, keyboards", icon: "🖱️" }
       ];
 
-      const products = [
+    const products = [
         { id: "p1", name: "Free Fire 530 Diamonds", category: "freefire", price: 999, img: "assets/product-2.svg", note: "Direct UID - Instant delivery" },
         { id: "p2", name: "PUBG UC 600 (Global)", category: "pubg", price: 1300, img: "assets/product-1.svg", note: "UID top-up - 5-10 min" },
         { id: "p3", name: "Google Play Gift Card $10", category: "gift", price: 1550, img: "assets/product-5.svg", note: "US region - Digital code" },
@@ -141,9 +149,9 @@ function initDb() {
       categories.forEach((c) => catStmt.run(c.id, c.name, c.tag, c.icon));
       catStmt.finalize();
 
-      const prodStmt = db.prepare("INSERT INTO products (id, name, category_id, price_npr, image, note) VALUES (?, ?, ?, ?, ?, ?)");
+      const prodStmt = db.prepare("INSERT INTO products (id, name, category_id, price_npr, price_usd, tier, availability, note, note_ne, image) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
       products.forEach((p) =>
-        prodStmt.run(p.id, p.name, p.category, p.price, p.img, p.note)
+        prodStmt.run(p.id, p.name, p.category, p.price, p.price_usd || null, p.tier || null, p.availability || null, p.note, p.note_ne || "", p.img)
       );
       prodStmt.finalize();
     });

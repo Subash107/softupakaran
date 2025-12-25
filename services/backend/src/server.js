@@ -45,6 +45,8 @@ app.use(express.json());
 const uploadsDir = path.join(__dirname, "..", "uploads");
 fs.mkdirSync(uploadsDir, { recursive: true });
 app.use("/uploads", express.static(uploadsDir));
+const LOG_DIR = path.join(__dirname, "..", "logs");
+fs.mkdirSync(LOG_DIR, { recursive: true });
 const dbPath = process.env.DATABASE_FILE || path.join(__dirname, "..", "data", "softupakaran.db");
 
 const storage = multer.diskStorage({
@@ -1025,6 +1027,22 @@ app.post("/api/orders", (req, res) => {
       console.error("Failed to insert order:", err.message);
       return res.status(500).json({ error: "Failed to create order" });
     }
+    const orderLog = {
+      id: this.lastID,
+      created_at: new Date().toISOString(),
+      payload: {
+        ...body,
+        items: lines.map((l) => ({ id: l.id, name: l.name, qty: l.qty || 1, lineTotal: l.lineTotal || null })),
+      },
+      total_npr: total,
+      source: source || "softupakaran-web",
+    };
+    const logPath = path.join(LOG_DIR, `order-${orderLog.id}.json`);
+    fs.writeFile(logPath, JSON.stringify(orderLog, null, 2), (logErr) => {
+      if (logErr) {
+        console.error("Failed to write order log:", logErr.message);
+      }
+    });
     res.json({ ok: true, id: this.lastID });
   });
 });
