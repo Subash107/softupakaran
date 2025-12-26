@@ -116,3 +116,30 @@ node scripts/demo-order.js
 ```
 
 It posts a ready-made Netflix + bundle order against your local backend and prints the response (good for sharing a quick story in your portfolio).
+
+## Refreshing the curated catalog
+
+- The backend seeds the catalog used on the frontend. After editing `scripts/update-sample-products.js`, run:
+
+  ```bash
+  node scripts/update-sample-products.js
+  ```
+
+- This pushes the curated Netflix metadata (tier, availability, notes) back into the SQLite seed so the frontend constants remain consistent. Always commit the updated catalog script plus any frontend category/product edits before running `infrastructure/scripts/verify-categories-sync.js`.
+
+## Backup history and metadata
+
+- The `infrastructure/scripts/backup-db.js` helper now records every run inside `infrastructure/backups/backup-records.json` alongside the zipped backup (`softupakaran-db-<timestamp>.db.gz`).
+- Use the API helpers for visibility:
+  - `GET /api/admin/backups` (admin or `x-admin-token`) lists recorded backups plus the download link (`/api/admin/backup/download`).
+  - `POST /api/admin/backups/run` re-executes the backup script (requiring the same token) and returns the freshly recorded metadata.
+
+## Local regression tests
+
+- Install dev dependencies (`npm install`) and run:
+
+  ```bash
+  npm test
+  ```
+
+- That command uses Jest + Supertest to exercise the health check, catalog listing, and feedback flow against a disposable SQLite file so backend changes remain safe before you push.

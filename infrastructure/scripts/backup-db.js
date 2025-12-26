@@ -4,6 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const zlib = require("zlib");
 const { pipeline } = require("stream/promises");
+const fsPromises = fs.promises;
 
 const repoRoot = path.resolve(__dirname, "..", "..");
 const DEFAULT_DB_PATH = path.join(repoRoot, "services", "backend", "data", "softupakaran.db");
@@ -71,11 +72,40 @@ async function main() {
   const destName = opts.gzip ? `${baseName}.gz` : baseName;
   const destPath = path.join(backupDir, destName);
 
+  const HISTORY_FILE = path.join(backupDir, "backup-records.json");
+  async function appendHistory(record) {
+    const limit = 40;
+    try {
+      const existing = await fsPromises.readFile(HISTORY_FILE, "utf-8");
+      const parsed = JSON.parse(existing);
+      const rows = Array.isArray(parsed) ? parsed : [];
+      const updated = [record, ...rows].slice(0, limit);
+      await fsPromises.writeFile(HISTORY_FILE, JSON.stringify(updated, null, 2), "utf-8");
+    } catch (err) {
+      if (err.code === "ENOENT") {
+        await fsPromises.writeFile(HISTORY_FILE, JSON.stringify([record], null, 2), "utf-8");
+      } else {
+        console.error("Failed to update backup history:", err.message);
+      }
+    }
+  }
+
   if (opts.gzip) {
     await pipeline(fs.createReadStream(dbPath), zlib.createGzip(), fs.createWriteStream(destPath));
   } else {
     fs.copyFileSync(dbPath, destPath);
   }
+
+  const stats = fs.statSync(destPath);
+  await appendHistory({
+    file: destName,
+    path: destPath,
+    created_at: new Date().toISOString(),
+    gzip: opts.gzip,
+    prefix: opts.prefix,
+    size: stats.size,
+    env: process.env.NODE_ENV || "development",
+  });
 
   console.log(`Backup created at ${destPath}`);
 }

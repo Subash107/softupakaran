@@ -40,11 +40,14 @@ node infrastructure/scripts/verify-categories-sync.js
     --debug
   ```
 
+## Database backup (metadata)
 - **Database backup** – snapshot the SQLite file for safekeeping. Compress to gz with `--gzip`, override the source `--db-path`, or change the destination folder:
 
   ```bash
   node infrastructure/scripts/backup-db.js --gzip --out-dir infrastructure/backups
   ```
+
+- Each run also appends metadata to `infrastructure/backups/backup-records.json`, and the backend exposes `GET /api/admin/backups` (admin token or JWT) to list the records plus `/api/admin/backups/run` to trigger the same helper on demand.
 
 - **Folder watcher** – monitor frontend/backend sources and run a command whenever files change. Example that reruns lint when the frontend changes:
 

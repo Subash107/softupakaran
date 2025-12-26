@@ -10,12 +10,22 @@ const crypto = require("crypto");
 const speakeasy = require("speakeasy");
 const qrcode = require("qrcode");
 const { google } = require("googleapis");
+const { spawn } = require("child_process");
 
 const db = require("./db");
 const initDb = require("./init-db");
 
 const app = express();
 const PORT = process.env.PORT || 4000;
+
+// helpers
+const fsPromises = fs.promises;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const repoRoot = path.resolve(__dirname, "..", "..");
+const BACKUP_HISTORY_LIMIT = 40;
+const BACKUP_RECORDS_FILE = path.join(repoRoot, "infrastructure", "backups", "backup-records.json");
+const BACKUP_SCRIPT_PATH = path.join(repoRoot, "infrastructure", "scripts", "backup-db.js");
+
 
 // Ensure correct protocol/host when behind a proxy (Render, etc.)
 app.set("trust proxy", 1);
@@ -40,6 +50,71 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.options(/.*/, cors(corsOptions));
 app.use(express.json());
+
+function sanitizeString(value = "") {
+  return typeof value === "string" ? value.trim() : "";
+}
+function sanitizeEmail(value = "") {
+  const email = sanitizeString(value).toLowerCase();
+  return EMAIL_REGEX.test(email) ? email : "";
+}
+function parseInteger(value, fallback = null) {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isNaN(parsed) ? fallback : parsed;
+}
+function clampNumber(value, min, max, fallback) {
+  if (typeof value !== "number") return fallback;
+  if (Number.isNaN(value)) return fallback;
+  return Math.min(Math.max(value, min), max);
+}
+function normalizeRating(value) {
+  const rating = parseInteger(value);
+  if (rating === null) return null;
+  return rating >= 1 && rating <= 5 ? rating : null;
+}
+function buildRequestTrace(req) {
+  return {
+    id: req.requestId,
+    ip: req.ip,
+    method: req.method,
+    path: req.path,
+    userAgent: req.headers["user-agent"] || "",
+  };
+}
+function logTrace(req, message, meta = {}) {
+  console.log(`[${new Date().toISOString()}][${req.requestId}] ${message}`, meta);
+}
+
+async function readBackupRecords() {
+  try {
+    const json = await fsPromises.readFile(BACKUP_RECORDS_FILE, "utf-8");
+    const records = JSON.parse(json);
+    return Array.isArray(records) ? records : [];
+  } catch (err) {
+    if (err.code !== "ENOENT") {
+      console.error("Failed to read backup history:", err.message);
+    }
+    return [];
+  }
+}
+
+async function appendBackupRecord(record) {
+  const formattedRecord = { created_at: new Date().toISOString(), ...record };
+  const current = await readBackupRecords();
+  const updated = [formattedRecord, ...current].slice(0, BACKUP_HISTORY_LIMIT);
+  try {
+    await fsPromises.mkdir(path.dirname(BACKUP_RECORDS_FILE), { recursive: true });
+    await fsPromises.writeFile(BACKUP_RECORDS_FILE, JSON.stringify(updated, null, 2), "utf-8");
+  } catch (err) {
+    console.error("Failed to write backup history:", err.message);
+  }
+}
+
+app.use((req, res, next) => {
+  req.requestId = req.headers["x-request-id"] || crypto.randomUUID();
+  res.setHeader("X-Request-ID", req.requestId);
+  next();
+});
 
 // ---------- uploads (eSewa QR, etc.) ----------
 const uploadsDir = path.join(__dirname, "..", "uploads");
@@ -264,25 +339,37 @@ ensureAdminUser();
 
 // ---------- basic ----------
 app.get("/api/health", (req, res) => {
-  res.json({ ok: true, time: new Date().toISOString() });
+  res.json({
+    ok: true,
+    time: new Date().toISOString(),
+    uptime: process.uptime(),
+    version: process.env.npm_package_version || "1.1.0",
+    request_id: req.requestId,
+  });
 });
 
 // ---------- auth & users ----------
 app.post("/api/auth/register", async (req, res) => {
   const { name, email, password, phone, whatsapp } = req.body || {};
-  if (!email || !password) return res.status(400).json({ error: "Email and password are required" });
+  const cleanEmail = sanitizeEmail(email);
+  const cleanPassword = typeof password === "string" ? password.trim() : "";
+  if (!cleanEmail || !cleanPassword) return res.status(400).json({ error: "Email and password are required" });
+  if (cleanPassword.length < 8) return res.status(400).json({ error: "Password must be at least 8 characters" });
 
   try {
-    const existing = await dbGet("SELECT id FROM users WHERE email = ?", [email]).catch(() => null);
+    const existing = await dbGet("SELECT id FROM users WHERE email = ?", [cleanEmail]).catch(() => null);
     if (existing) return res.status(409).json({ error: "Email already registered" });
 
-    const hash = await bcrypt.hash(password, 10);
+    const hash = await bcrypt.hash(cleanPassword, 10);
+    const cleanName = sanitizeString(name);
+    const cleanPhone = sanitizeString(phone);
+    const cleanWhatsapp = sanitizeString(whatsapp);
     const result = await dbRun(
       "INSERT INTO users (name, email, password_hash, phone, whatsapp, role) VALUES (?, ?, ?, ?, ?, 'user')",
-      [name || "", email, hash, phone || "", whatsapp || ""]
+      [cleanName, cleanEmail, hash, cleanPhone, cleanWhatsapp]
     );
 
-    const user = { id: result.lastID, role: "user", email, name: name || "" };
+    const user = { id: result.lastID, role: "user", email: cleanEmail, name: cleanName };
     res.json({ token: signToken(user) });
   } catch (err) {
     console.error("Register failed:", err.message);
@@ -293,19 +380,21 @@ app.post("/api/auth/register", async (req, res) => {
 // ---------- admin: create users ----------
 app.post("/api/admin/users", adminRequired, async (req, res) => {
   const { name, email, password, phone, whatsapp, role } = req.body || {};
-  const cleanEmail = String(email || "").trim().toLowerCase();
+  const cleanEmail = sanitizeEmail(email);
+  const cleanPassword = typeof password === "string" ? password.trim() : "";
   const cleanRole = String(role || "user").trim() || "user";
-  if (!cleanEmail || !password) return res.status(400).json({ error: "Email and password are required" });
+  if (!cleanEmail || !cleanPassword) return res.status(400).json({ error: "Email and password are required" });
+  if (cleanPassword.length < 8) return res.status(400).json({ error: "Password must be at least 8 characters" });
   if (!["user", "admin"].includes(cleanRole)) return res.status(400).json({ error: "role must be user or admin" });
 
   try {
     const existing = await dbGet("SELECT id FROM users WHERE email = ?", [cleanEmail]).catch(() => null);
     if (existing) return res.status(409).json({ error: "Email already registered" });
 
-    const hash = await bcrypt.hash(String(password), 10);
+    const hash = await bcrypt.hash(cleanPassword, 10);
     const result = await dbRun(
       "INSERT INTO users (name, email, password_hash, phone, whatsapp, role) VALUES (?, ?, ?, ?, ?, ?)",
-      [String(name || ""), cleanEmail, hash, String(phone || ""), String(whatsapp || ""), cleanRole]
+      [sanitizeString(name), cleanEmail, hash, sanitizeString(phone), sanitizeString(whatsapp), cleanRole]
     );
 
     const row = await dbGet(
@@ -322,12 +411,14 @@ app.post("/api/admin/users", adminRequired, async (req, res) => {
 
 app.post("/api/auth/login", async (req, res) => {
   const { email, password, otp } = req.body || {};
-  if (!email || !password) return res.status(400).json({ error: "Email and password are required" });
+  const cleanEmail = sanitizeEmail(email);
+  const cleanPassword = typeof password === "string" ? password : "";
+  if (!cleanEmail || !cleanPassword) return res.status(400).json({ error: "Email and password are required" });
 
   try {
     const user = await dbGet(
       "SELECT id, email, password_hash, role, name, whatsapp, phone, created_at FROM users WHERE email = ?",
-      [email]
+      [cleanEmail]
     ).catch(() => null);
 
     if (!user) return res.status(401).json({ error: "Invalid credentials" });
@@ -475,10 +566,61 @@ app.get("/api/admin/backup/download", backupAuth, (_req, res) => {
   });
 });
 
+app.get("/api/admin/backups", adminRequired, async (req, res) => {
+  try {
+    const records = await readBackupRecords();
+    const downloadUrl = publicUrl(req, "/api/admin/backup/download");
+    res.json({ records, download_url: downloadUrl });
+  } catch (err) {
+    console.error("Failed to load backup history:", err.message);
+    res.status(500).json({ error: "Failed to load backup history" });
+  }
+});
+
+app.post("/api/admin/backups/run", backupAuth, async (_req, res) => {
+  if (!fs.existsSync(BACKUP_SCRIPT_PATH)) {
+    return res.status(500).json({ error: "Backup script missing" });
+  }
+  try {
+    const args = ["--gzip"];
+    const child = spawn(process.execPath, [BACKUP_SCRIPT_PATH, ...args], { env: process.env });
+    let stdout = "";
+    let stderr = "";
+    child.stdout?.on("data", (chunk) => {
+      stdout += chunk.toString();
+    });
+    child.stderr?.on("data", (chunk) => {
+      stderr += chunk.toString();
+    });
+    await new Promise((resolve, reject) => {
+      child.on("error", reject);
+      child.on("exit", (code) => {
+        if (code === 0) return resolve();
+        reject(new Error(`Backup script exited with ${code}`));
+      });
+    });
+    const records = await readBackupRecords();
+    res.json({
+      ok: true,
+      output: stdout.trim(),
+      stderr: stderr.trim(),
+      latest: records[0] || null,
+    });
+  } catch (err) {
+    console.error("Backup runner failed:", err.message);
+    res.status(500).json({ error: "Backup command failed", detail: err.message });
+  }
+});
+
 // ---------- feedback ----------
 app.post("/api/feedback", authOptional, async (req, res) => {
   const { name, email, rating, message } = req.body || {};
-  if (!message) return res.status(400).json({ error: "Message is required" });
+  const cleanMessage = sanitizeString(message);
+  if (!cleanMessage) return res.status(400).json({ error: "Message is required" });
+  const ratingValue = normalizeRating(rating);
+  if (rating !== undefined && rating !== null && rating !== "" && ratingValue === null) {
+    return res.status(400).json({ error: "Rating must be between 1 and 5" });
+  }
 
   const userId = req.user?.userId || null;
   // If the user is logged in (profile page), we can publish instantly.
@@ -490,12 +632,10 @@ app.post("/api/feedback", authOptional, async (req, res) => {
       "INSERT INTO feedback (user_id, name, email, rating, message, status) VALUES (?, ?, ?, ?, ?, ?)",
       [
         userId,
-        name || "",
-        email || "",
-        (rating === undefined || rating === null || rating === "")
-          ? null
-          : (isNaN(parseInt(rating, 10)) ? null : parseInt(rating, 10)),
-        message,
+        sanitizeString(name),
+        sanitizeEmail(email),
+        ratingValue,
+        cleanMessage,
         status,
       ]
     );
@@ -986,13 +1126,24 @@ app.post("/api/admin/uploads/product-image", adminRequired, uploadProductImage.s
 // ---------- orders ----------
 app.post("/api/orders", (req, res) => {
   const body = req.body || {};
-  const lines = Array.isArray(body.items) ? body.items : [];
-  const total = body.totalNpr || null;
-  const note = body.extraNote || null;
-  const source = body.source || null;
-
-  const firstLine = lines[0] || {};
-  const quantity = lines.reduce((sum, l) => sum + (l.qty || 0), 0) || null;
+  const rawItems = Array.isArray(body.items) ? body.items : [];
+  if (!rawItems.length) return res.status(400).json({ error: "Order items are required" });
+  const safeItems = rawItems.map((item) => ({
+    id: sanitizeString(item.id),
+    name: sanitizeString(item.name) || "Unknown item",
+    qty: clampNumber(parseInteger(item.qty, 1), 1, 999, 1),
+    lineTotal: parseInteger(item.lineTotal, null),
+  }));
+  const quantity = safeItems.reduce((sum, item) => sum + item.qty, 0);
+  const totalNpr = parseInteger(body.totalNpr ?? body.total, null);
+  const paymentMethod = sanitizeString(body.paymentMethod ?? body.method);
+  const statusValue = sanitizeString(body.status) || "created";
+  const trace = buildRequestTrace(req);
+  const source = sanitizeString(body.source) || "softupakaran-web";
+  const customerName = sanitizeString(body.customerName);
+  const gameUid = sanitizeString(body.gameUid);
+  const whatsapp = sanitizeString(body.whatsapp);
+  const productId = safeItems[0]?.id || sanitizeString(body.productId);
 
   const sql = `
     INSERT INTO orders (
@@ -1010,16 +1161,20 @@ app.post("/api/orders", (req, res) => {
   `;
 
   const params = [
-    body.customerName || null,
-    body.gameUid || null,
-    firstLine.id || body.productId || null,
+    customerName || null,
+    gameUid || null,
+    productId || null,
     quantity,
-    total,
-    body.paymentMethod || body.method || null,
-    body.status || "created",
-    body.whatsapp || null,
-    JSON.stringify(body) || null,
-    source || null,
+    totalNpr,
+    paymentMethod || null,
+    statusValue,
+    whatsapp || null,
+    JSON.stringify({
+      ...body,
+      items: safeItems,
+      trace,
+    }),
+    source,
   ];
 
   db.run(sql, params, function (err) {
@@ -1030,12 +1185,23 @@ app.post("/api/orders", (req, res) => {
     const orderLog = {
       id: this.lastID,
       created_at: new Date().toISOString(),
-      payload: {
-        ...body,
-        items: lines.map((l) => ({ id: l.id, name: l.name, qty: l.qty || 1, lineTotal: l.lineTotal || null })),
+      trace,
+      totals: {
+        total_npr: totalNpr,
+        items: safeItems.length,
+        quantity,
+        source,
       },
-      total_npr: total,
-      source: source || "softupakaran-web",
+      payload: {
+        items: safeItems,
+        payment_method: paymentMethod,
+        status: statusValue,
+        whatsapp,
+        customer_name: customerName,
+        game_uid: gameUid,
+        product_id: productId,
+        raw_request: body,
+      },
     };
     const logPath = path.join(LOG_DIR, `order-${orderLog.id}.json`);
     fs.writeFile(logPath, JSON.stringify(orderLog, null, 2), (logErr) => {
@@ -1043,6 +1209,7 @@ app.post("/api/orders", (req, res) => {
         console.error("Failed to write order log:", logErr.message);
       }
     });
+    logTrace(req, "Order inserted", { orderId: orderLog.id });
     res.json({ ok: true, id: this.lastID });
   });
 });
@@ -1107,9 +1274,13 @@ app.post("/api/auth/google", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log("dYs? SoftUpakaran API running on http://localhost:" + PORT);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log("dYs? SoftUpakaran API running on http://localhost:" + PORT);
+  });
+}
+
+module.exports = app;
 
 
 
