@@ -27,3 +27,42 @@ node infrastructure/scripts/verify-categories-sync.js
 - `services/frontend/styles.css` styles the language pill, hero tagline, and new demo-order notice so the UI still looks sharp on every screen size.
 - The storefront now posts demo orders through `sendOrderToBackend`, `triggerDemoOrder`, and surfaces the backend order ID (plus the corresponding `services/backend/logs/order-<id>.json`) inside the cart modal. Use `node services/backend/scripts/demo-order.js` to replay the same POST payload from the CLI and confirm the API→UI→log loop.
 - For your portfolio, capture a short screen recording or GIF showing the hero/catalog, language toggle, and demo order confirmation, and link it from the README/docs so recruiters can instantly see the workflow.
+
+## Automation helpers
+
+- **File uploader** – push a local image into the backend uploads folder (or any other multipart endpoint) with:
+
+  ```bash
+  node infrastructure/scripts/upload-file.js --file ./assets/esewa-qr-placeholder.svg \
+    --url http://localhost:4000/api/admin/uploads/product-image \
+    --admin-token "$ADMIN_TOKEN" \
+    --form note="Local upload" \
+    --debug
+  ```
+
+- **Database backup** – snapshot the SQLite file for safekeeping. Compress to gz with `--gzip`, override the source `--db-path`, or change the destination folder:
+
+  ```bash
+  node infrastructure/scripts/backup-db.js --gzip --out-dir infrastructure/backups
+  ```
+
+- **Folder watcher** – monitor frontend/backend sources and run a command whenever files change. Example that reruns lint when the frontend changes:
+
+  ```bash
+  node infrastructure/scripts/watch-folders.js --dirs services/frontend,services/backend --cmd "npm run lint" --debounce 600
+  ```
+
+- **Website deployer** – copy the static storefront into infrastructure artifacts (use `--clean` to remove the target first or `--pre`/`--post` to run hooks):
+
+  ```bash
+  node infrastructure/scripts/deploy-website.js --source services/frontend --target infrastructure/deployments/frontend --clean
+  ```
+
+- **PowerShell orchestrator** – wrap the helpers from one place (run backup+deploy, upload, or fire the watcher). Example combination:
+
+  ```powershell
+  powershell -ExecutionPolicy Bypass -File infrastructure/scripts/automation.ps1 `
+    -Action all -BackupGzip -DeployClean -DeployPost "echo Ready"
+  ```
+
+  Use `-Action upload` with `-UploadFile` or `-Action watch` with `-WatchCmd` if you need a focused run.
