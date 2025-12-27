@@ -5,12 +5,6 @@ terraform {
       version = ">= 1.29.0"
     }
   }
-  provider_installation {
-    filesystem_mirror {
-      path = "${path.module}/render-provider-mirror/registry.terraform.io"
-    }
-    direct {}
-  }
 }
 
 provider "render" {
