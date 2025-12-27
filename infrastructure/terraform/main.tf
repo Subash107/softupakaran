@@ -11,7 +11,6 @@ terraform {
 
 provider "render" {
   api_key = var.render_api_key
-  region  = var.render_region
 }
 
 module "backend_service" {

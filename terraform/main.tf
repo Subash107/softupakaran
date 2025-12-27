@@ -10,7 +10,6 @@ terraform {
 provider "render" {
   alias   = "module"
   api_key = var.render_api_key
-  region  = var.render_region
 }
 
 resource "render_service" "this" {
