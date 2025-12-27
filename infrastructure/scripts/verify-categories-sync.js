@@ -73,9 +73,9 @@ function ensureNotes(notes, categories) {
 }
 
 function main() {
-  const root = path.resolve(__dirname, "..");
-  const frontendPath = path.join(root, "frontend", "js", "app.js");
-  const backendPath = path.join(root, "backend", "scripts", "update-sample-products.js");
+  const repoRoot = path.resolve(__dirname, "..", "..");
+  const frontendPath = path.join(repoRoot, "services", "frontend", "js", "app.js");
+  const backendPath = path.join(repoRoot, "services", "backend", "scripts", "update-sample-products.js");
 
   const frontend = read(frontendPath);
   const backend = read(backendPath);

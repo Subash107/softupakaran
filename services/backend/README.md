@@ -48,6 +48,12 @@ Edit `.env`:
 - `GET /api/public/settings`
   - returns `{ whatsapp_number, esewa_qr_url }`
 
+### Blog posts (customer side)
+- `GET /api/public/blog-posts` (optional `?limit=4`)
+  - returns `[ { id, slug, title, summary, content, featured_image, published_at } ]`
+- `GET /api/public/blog-posts/:slug`
+  - returns a single post object (published posts only)
+
 ### Feedback
 - `POST /api/feedback` (optional Bearer token)
 
@@ -61,6 +67,10 @@ Edit `.env`:
 - `PATCH /api/admin/feedback/:id` (set status)
 - `PUT /api/admin/settings/whatsapp`
 - `POST /api/admin/settings/esewa-qr` (multipart file upload)
+- `GET /api/admin/blog-posts`
+- `POST /api/admin/blog-posts`
+- `PATCH /api/admin/blog-posts/:id`
+- `DELETE /api/admin/blog-posts/:id`
 
 ### Store
 - `GET /api/categories`
