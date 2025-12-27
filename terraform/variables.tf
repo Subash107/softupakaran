@@ -60,3 +60,27 @@ variable "env_variables" {
   type        = map(string)
   default     = {}
 }
+
+variable "backend_env" {
+  description = "Legacy backend env payload (unused in this module)."
+  type        = map(string)
+  default     = {}
+}
+
+variable "backend_api_base" {
+  description = "Legacy backend API base (unused in this module)."
+  type        = string
+  default     = ""
+}
+
+variable "VERCEL_API_TOKEN" {
+  description = "Legacy Vercel token placeholder."
+  type        = string
+  default     = ""
+}
+
+variable "render_region" {
+  description = "Region placeholder kept for workspace compatibility."
+  type        = string
+  default     = ""
+}
