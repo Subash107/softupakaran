@@ -75,13 +75,14 @@
         </div>
       </div>
 
-      <div class="tabs">
-        <button class="tab active" data-tab="settings">Settings</button>
-        <button class="tab" data-tab="users">Users</button>
-        <button class="tab" data-tab="feedback">Feedback</button>
-        <button class="tab" data-tab="categories">Categories</button>
-        <button class="tab" data-tab="products">Products</button>
-      </div>
+        <div class="tabs">
+          <button class="tab active" data-tab="settings">Settings</button>
+          <button class="tab" data-tab="users">Users</button>
+          <button class="tab" data-tab="feedback">Feedback</button>
+          <button class="tab" data-tab="categories">Categories</button>
+          <button class="tab" data-tab="products">Products</button>
+          <button class="tab" data-tab="blog">Blog</button>
+        </div>
 
       <div class="tabpanes">
         <div class="pane active" id="pane-settings">
@@ -457,6 +458,78 @@
             </div>
 
           </div>
+</div>
+        <div class="pane" id="pane-blog">
+          <div class="pane-head">
+            <div style="display:flex; align-items:flex-end; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+              <div>
+                <h3>Blog posts</h3>
+                <p class="muted">Publish news, tips, and tutorials in the storefront feed.</p>
+              </div>
+              <div class="actions" style="padding:0;">
+                <button id="btnBlogRefresh" class="btn">Refresh</button>
+                <button id="btnBlogNew" class="btn primary">+ Add Post</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card inner hidden" id="blogEditor" style="margin-bottom:12px;">
+            <h3 id="blogEditorTitle" style="margin-top:0;">Add blog post</h3>
+            <div class="grid2">
+              <label class="field">
+                <span>Title</span>
+                <input id="blogTitle" type="text" placeholder="Blog title" />
+              </label>
+              <label class="field">
+                <span>Slug (optional)</span>
+                <input id="blogSlug" type="text" placeholder="friendly-slug" />
+              </label>
+              <label class="field">
+                <span>Featured image URL</span>
+                <input id="blogImage" type="text" placeholder="e.g. assets/product-3.svg or /uploads/..." />
+              </label>
+              <label class="field">
+                <span>Published at</span>
+                <input id="blogPublished" type="datetime-local" />
+              </label>
+              <label class="field">
+                <span>Status</span>
+                <select id="blogStatus">
+                  <option value="published">Published</option>
+                  <option value="draft">Draft</option>
+                </select>
+              </label>
+              <label class="field" style="grid-column:1/-1;">
+                <span>Summary</span>
+                <textarea id="blogSummary" rows="2" placeholder="Short summary to appear in the grid"></textarea>
+              </label>
+              <label class="field" style="grid-column:1/-1;">
+                <span>Content</span>
+                <textarea id="blogContent" rows="4" placeholder="Full article content or HTML"></textarea>
+              </label>
+            </div>
+            <div class="actions">
+              <button id="btnBlogSave" class="btn primary">Save post</button>
+              <button id="btnBlogCancel" class="btn">Cancel</button>
+            </div>
+          </div>
+
+          <div class="tablewrap">
+            <table class="table" id="blogTable">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Title</th>
+                  <th>Slug</th>
+                  <th>Published</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div id="blogMsg" class="msg"></div>
         </div>
 </div>
       </div>

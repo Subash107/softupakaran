@@ -173,9 +173,11 @@
       try { await refreshProducts(); } catch (e) { /* ignore */ }
     }
 
+    try { await refreshBlogPosts(); } catch (_) { /* ignore */ }
+
     // Admin 2FA status
     try { await loadTotpStatus(); } catch (_) { /* ignore */ }
-}
+  }
 
   async function login() {
     setMsg($("loginMsg"), "");
@@ -780,6 +782,148 @@ function formatDate(v) {
     }
   }
 
+  // ---------- Blog posts (admin) ----------
+  let blogEditingMode = "new";
+  let blogEditingId = null;
+  let blogPostsCache = [];
+
+  function showBlogEditor(show) {
+    const el = $("blogEditor");
+    if (!el) return;
+    el.classList.toggle("hidden", !show);
+  }
+
+  function clearBlogEditor() {
+    blogEditingMode = "new";
+    blogEditingId = null;
+    $("blogEditorTitle").textContent = "Add blog post";
+    if ($("blogTitle")) $("blogTitle").value = "";
+    if ($("blogSlug")) $("blogSlug").value = "";
+    if ($("blogSummary")) $("blogSummary").value = "";
+    if ($("blogContent")) $("blogContent").value = "";
+    if ($("blogImage")) $("blogImage").value = "";
+    if ($("blogPublished")) $("blogPublished").value = "";
+    if ($("blogStatus")) $("blogStatus").value = "published";
+  }
+
+  function fillBlogEditor(post) {
+    if (!post) return;
+    blogEditingMode = "edit";
+    blogEditingId = post.id;
+    $("blogEditorTitle").textContent = "Edit blog post: " + (post.title || post.slug);
+    if ($("blogTitle")) $("blogTitle").value = post.title || "";
+    if ($("blogSlug")) $("blogSlug").value = post.slug || "";
+    if ($("blogSummary")) $("blogSummary").value = post.summary || "";
+    if ($("blogContent")) $("blogContent").value = post.content || "";
+    if ($("blogImage")) $("blogImage").value = post.featured_image || "";
+    if ($("blogPublished")) $("blogPublished").value = formatDatetimeLocal(post.published_at);
+    if ($("blogStatus")) $("blogStatus").value = post.status || "published";
+  }
+
+  function formatDatetimeLocal(value) {
+    if (!value) return "";
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return "";
+    const offset = d.getTimezoneOffset();
+    const local = new Date(d.getTime() - offset * 60000);
+    return local.toISOString().slice(0, 16);
+  }
+
+  async function refreshBlogPosts() {
+    const table = $("blogTable");
+    if (!table) return;
+    try {
+      const r = await api("/api/admin/blog-posts");
+      if (!r.ok) throw new Error("Blog posts fetch failed: " + r.status);
+      const rows = await r.json();
+      blogPostsCache = Array.isArray(rows) ? rows : [];
+      const tbody = table.querySelector("tbody");
+      tbody.innerHTML = "";
+      blogPostsCache.forEach((post) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${post.id ?? ""}</td>
+          <td>${escapeHtml(post.title || "")}</td>
+          <td>${escapeHtml(post.slug || "")}</td>
+          <td>${escapeHtml(formatDate(post.published_at || post.created_at))}</td>
+          <td><span class="badge ${post.status === "published" ? "ok" : "warn"}">${escapeHtml(post.status || "published")}</span></td>
+          <td>
+            <button class="btn" data-blog-edit="${post.id}">Edit</button>
+            <button class="btn danger" data-blog-del="${post.id}" data-blog-del-title="${escapeAttr(post.title || post.slug || post.id)}">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+      setMsg($("blogMsg"), blogPostsCache.length ? "" : "No blog posts available.");
+    } catch (err) {
+      setMsg($("blogMsg"), String(err.message || err), "error");
+    }
+  }
+
+  async function saveBlogPost() {
+    try {
+      const title = ($("blogTitle")?.value || "").trim();
+      if (!title) {
+        setMsg($("blogMsg"), "Title is required.", "error");
+        return;
+      }
+      const payload = {
+        title,
+        status: ($("blogStatus")?.value || "published"),
+      };
+      const slug = ($("blogSlug")?.value || "").trim();
+      if (slug) payload.slug = slug;
+      const summary = ($("blogSummary")?.value || "").trim();
+      if (summary) payload.summary = summary;
+      const content = ($("blogContent")?.value || "").trim();
+      if (content) payload.content = content;
+      const image = ($("blogImage")?.value || "").trim();
+      if (image) payload.featured_image = image;
+      const publishedRaw = ($("blogPublished")?.value || "").trim();
+      if (publishedRaw) {
+        const publishedDate = new Date(publishedRaw);
+        if (!Number.isNaN(publishedDate.getTime())) {
+          payload.published_at = publishedDate.toISOString();
+        }
+      }
+      const url = blogEditingMode === "edit" ? `/api/admin/blog-posts/${encodeURIComponent(blogEditingId)}` : "/api/admin/blog-posts";
+      const method = blogEditingMode === "edit" ? "PATCH" : "POST";
+      const res = await api(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const txt = await safeText(res);
+        setMsg($("blogMsg"), `Save failed: ${txt}`, "error");
+        return;
+      }
+      setMsg($("blogMsg"), "Blog post saved.", "success");
+      clearBlogEditor();
+      showBlogEditor(false);
+      await refreshBlogPosts();
+    } catch (err) {
+      setMsg($("blogMsg"), String(err.message || err), "error");
+    }
+  }
+
+  async function deleteBlogPost(id, title) {
+    if (!id) return;
+    if (!confirm(`Delete blog post ${title || id}?`)) return;
+    try {
+      const res = await api(`/api/admin/blog-posts/${encodeURIComponent(id)}`, { method: "DELETE" });
+      if (!res.ok) {
+        const txt = await safeText(res);
+        setMsg($("blogMsg"), `Delete failed: ${txt}`, "error");
+        return;
+      }
+      setMsg($("blogMsg"), "Blog post deleted.", "success");
+      await refreshBlogPosts();
+    } catch (err) {
+      setMsg($("blogMsg"), String(err.message || err), "error");
+    }
+  }
+
   // ---------- Products (CRUD + Search + Pagination) ----------
   let prodEditingMode = "new"; // "new" | "edit"
   let prodEditingId = null;
@@ -1171,6 +1315,34 @@ document.addEventListener("DOMContentLoaded", async () => {
       const delBtn = e.target?.closest?.("button[data-cat-del]");
       if (delBtn) {
         deleteCategory(delBtn.getAttribute("data-cat-del"), delBtn.getAttribute("data-cat-del-name"));
+      }
+    });
+
+    $("btnBlogRefresh")?.addEventListener("click", () => refreshBlogPosts());
+    $("btnBlogNew")?.addEventListener("click", () => {
+      clearBlogEditor();
+      showBlogEditor(true);
+      setMsg($("blogMsg"), "");
+    });
+    $("btnBlogSave")?.addEventListener("click", saveBlogPost);
+    $("btnBlogCancel")?.addEventListener("click", () => {
+      clearBlogEditor();
+      showBlogEditor(false);
+    });
+    $("blogTable")?.addEventListener("click", (e) => {
+      const editBtn = e.target?.closest?.("button[data-blog-edit]");
+      if (editBtn) {
+        const id = editBtn.getAttribute("data-blog-edit");
+        const post = blogPostsCache.find(p => String(p.id) === String(id));
+        if (post) {
+          showBlogEditor(true);
+          fillBlogEditor(post);
+        }
+        return;
+      }
+      const delBtn = e.target?.closest?.("button[data-blog-del]");
+      if (delBtn) {
+        deleteBlogPost(delBtn.getAttribute("data-blog-del"), delBtn.getAttribute("data-blog-del-title"));
       }
     });
 

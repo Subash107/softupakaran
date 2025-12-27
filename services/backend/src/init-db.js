@@ -99,16 +99,78 @@ function initDb() {
     `);
 
     // Simple key/value settings store
-    db.run(`
-      CREATE TABLE IF NOT EXISTS settings (
-        key TEXT PRIMARY KEY,
-        value TEXT
+      db.run(`
+        CREATE TABLE IF NOT EXISTS settings (
+          key TEXT PRIMARY KEY,
+          value TEXT
       )
     `);
 
     // Default settings (safe to re-run)
-    db.run(`INSERT OR IGNORE INTO settings (key, value) VALUES ('whatsapp_number', '')`);
-    db.run(`INSERT OR IGNORE INTO settings (key, value) VALUES ('esewa_qr_filename', '')`);
+      db.run(`INSERT OR IGNORE INTO settings (key, value) VALUES ('whatsapp_number', '')`);
+      db.run(`INSERT OR IGNORE INTO settings (key, value) VALUES ('esewa_qr_filename', '')`);
+
+    // Blog posts
+    db.run(`
+      CREATE TABLE IF NOT EXISTS blog_posts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        slug TEXT UNIQUE,
+        title TEXT NOT NULL,
+        summary TEXT,
+        content TEXT,
+        featured_image TEXT,
+        published_at TEXT,
+        status TEXT DEFAULT 'published',
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now'))
+      )
+    `);
+
+    db.get("SELECT COUNT(*) AS count FROM blog_posts", (err, row) => {
+      if (err) {
+        console.error("⚠️ Failed to check blog posts count:", err.message);
+        return;
+      }
+
+      if (row.count > 0) {
+        console.log("ℹ️ Blog posts already seeded.");
+        return;
+      }
+
+      console.log("🌱 Seeding demo blog posts...");
+      const now = new Date().toISOString();
+      const yesterday = new Date(Date.now() - 86400000).toISOString();
+      const posts = [
+        {
+          slug: "how-to-order-digital-plans",
+          title: "How to order digital plans with SoftUpakaran",
+          summary: "Quick steps to browse, select, and secure a Netflix or VPN plan for Nepal.",
+          content: "Pick a category, add your desired items to the cart, then check out via WhatsApp or eSewa QR. We deliver within minutes with clear instructions.",
+          featured_image: "assets/product-4.svg",
+          published_at: yesterday,
+          status: "published"
+        },
+        {
+          slug: "whatsapp-support-tips",
+          title: "WhatsApp support tips for instant delivery",
+          summary: "Use automated replies, share receipts, and confirm your order via WhatsApp.",
+          content: "After checkout, send a screenshot of your payment on WhatsApp. We reply with activation details including proofs saved under backend logs.",
+          featured_image: "assets/product-3.svg",
+          published_at: now,
+          status: "published"
+        }
+      ];
+
+      const stmt = db.prepare(`
+        INSERT OR IGNORE INTO blog_posts (slug, title, summary, content, featured_image, published_at, status, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+      posts.forEach(p => {
+        const publishedAt = p.published_at || now;
+        stmt.run(p.slug, p.title, p.summary, p.content, p.featured_image, publishedAt, p.status || "published", publishedAt, publishedAt);
+      });
+      stmt.finalize();
+    });
 
     // Seed demo data (categories & products) - keep your original demo store
     db.get("SELECT COUNT(*) AS count FROM categories", (err, row) => {

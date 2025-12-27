@@ -69,3 +69,9 @@ node infrastructure/scripts/verify-categories-sync.js
   ```
 
   Use `-Action upload` with `-UploadFile` or `-Action watch` with `-WatchCmd` if you need a focused run.
+
+## Infrastructure automation highlights
+
+- **Terraform Render modules** – `infrastructure/terraform/` wires the Render provider, reuses `modules/web-service/main.tf`, and exposes variables/outputs so the backend API and frontend static site can be provisioned consistently. The quick-start guide (`infrastructure/terraform/README.md`) walks through applying the stack and capturing the `frontend_service_url`/`backend_service_url` outputs.
+- **CI/CD and smoke tests** – CI definitions (`.gitlab-ci.yml`, `Jenkinsfile`, `render.yaml`) show real deployment/pipeline steps plus `smoke-test.ps1` that checks `/healthz` and an admin endpoint to prove the API is up once Render or Docker finishes deploying.
+- **Local orchestration helpers** – `docker-compose.yml` stands up both services for dev work, and the automation scripts (upload, watch, backup, deploy) keep the catalog seeds, uploads, and artifacts in sync so your deployments stay predictable between local, staging, and production runs.

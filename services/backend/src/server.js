@@ -72,6 +72,32 @@ function normalizeRating(value) {
   if (rating === null) return null;
   return rating >= 1 && rating <= 5 ? rating : null;
 }
+function slugify(value = "") {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "";
+}
+function normalizeBlogStatus(value) {
+  const v = String(value || "").toLowerCase();
+  return v === "draft" ? "draft" : "published";
+}
+function buildBlogPostResponse(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    slug: row.slug,
+    title: row.title,
+    summary: row.summary || "",
+    content: row.content || "",
+    featured_image: row.featured_image || "",
+    published_at: row.published_at || row.created_at,
+    status: row.status || "published",
+    created_at: row.created_at,
+    updated_at: row.updated_at
+  };
+}
 function buildRequestTrace(req) {
   return {
     id: req.requestId,
@@ -980,6 +1006,34 @@ app.get("/api/products/:id", (req, res) => {
 });
 
 
+app.get("/api/public/blog-posts", async (req, res) => {
+  const limit = clampNumber(parseInteger(req.query.limit), 1, 20, 4);
+  try {
+    const rows = await dbAll(
+      "SELECT * FROM blog_posts WHERE status = 'published' ORDER BY COALESCE(published_at, created_at) DESC LIMIT ?",
+      [limit]
+    );
+    res.json((rows || []).map(buildBlogPostResponse));
+  } catch (err) {
+    console.error("Failed to load blog posts:", err.message);
+    res.status(500).json({ error: "Failed to load blog posts" });
+  }
+});
+
+app.get("/api/public/blog-posts/:slug", async (req, res) => {
+  const slug = String(req.params.slug || "").trim();
+  if (!slug) return res.status(400).json({ error: "Slug is required" });
+  try {
+    const row = await dbGet("SELECT * FROM blog_posts WHERE slug = ? AND status = 'published'", [slug]);
+    if (!row) return res.status(404).json({ error: "Not found" });
+    res.json(buildBlogPostResponse(row));
+  } catch (err) {
+    console.error("Failed to load blog post:", err.message);
+    res.status(500).json({ error: "Failed to load blog post" });
+  }
+});
+
+
 // ---------- admin: products CRUD + search ----------
 
 // ---------- admin: products CRUD + search ----------
@@ -1120,6 +1174,121 @@ app.post("/api/admin/uploads/product-image", adminRequired, uploadProductImage.s
   if (!req.file) return res.status(400).json({ error: "Missing image" });
   const url = `/uploads/${req.file.filename}`;
   res.json({ ok: true, url, absoluteUrl: `${req.protocol}://${req.get("host")}${url}` });
+});
+
+
+// ---------- admin: blog posts ----------
+app.get("/api/admin/blog-posts", adminRequired, async (req, res) => {
+  try {
+    const rows = await dbAll("SELECT * FROM blog_posts ORDER BY COALESCE(published_at, created_at) DESC");
+    res.json((rows || []).map(buildBlogPostResponse));
+  } catch (err) {
+    console.error("Failed to load blog posts:", err.message);
+    res.status(500).json({ error: "Failed to load blog posts" });
+  }
+});
+
+app.post("/api/admin/blog-posts", adminRequired, express.json(), async (req, res) => {
+  const body = req.body || {};
+  const title = sanitizeString(body.title);
+  if (!title) return res.status(400).json({ error: "Title is required" });
+  const slug = slugify(body.slug || title) || `post-${Date.now()}`;
+  const summary = sanitizeString(body.summary);
+  const content = sanitizeString(body.content);
+  const featuredImage = sanitizeString(body.featured_image || body.image);
+  const publishedAt = sanitizeString(body.published_at) || new Date().toISOString();
+  const status = normalizeBlogStatus(body.status);
+  const now = new Date().toISOString();
+  try {
+    const result = await dbRun(
+      `INSERT INTO blog_posts (slug, title, summary, content, featured_image, published_at, status, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [slug, title, summary || null, content || null, featuredImage || null, publishedAt, status, now, now]
+    );
+    const row = await dbGet("SELECT * FROM blog_posts WHERE id = ?", [result.lastID]);
+    res.status(201).json(buildBlogPostResponse(row));
+  } catch (err) {
+    if (err && err.code === "SQLITE_CONSTRAINT") {
+      return res.status(409).json({ error: "Slug already exists" });
+    }
+    console.error("Failed to create blog post:", err.message);
+    res.status(500).json({ error: "Failed to create blog post" });
+  }
+});
+
+app.patch("/api/admin/blog-posts/:id", adminRequired, express.json(), async (req, res) => {
+  const id = parseInteger(req.params.id, null);
+  if (!id) return res.status(400).json({ error: "Invalid id" });
+  const body = req.body || {};
+  const fields = [];
+  const params = [];
+
+  if (body.title !== undefined) {
+    const title = sanitizeString(body.title);
+    if (!title) return res.status(400).json({ error: "Title is required" });
+    fields.push("title = ?");
+    params.push(title);
+  }
+  if (body.slug !== undefined) {
+    const slugValue = slugify(body.slug || "");
+    if (!slugValue) return res.status(400).json({ error: "Slug cannot be empty" });
+    fields.push("slug = ?");
+    params.push(slugValue);
+  }
+  if (body.summary !== undefined) {
+    fields.push("summary = ?");
+    params.push(sanitizeString(body.summary) || null);
+  }
+  if (body.content !== undefined) {
+    fields.push("content = ?");
+    params.push(sanitizeString(body.content) || null);
+  }
+  if (body.featured_image !== undefined || body.image !== undefined) {
+    fields.push("featured_image = ?");
+    params.push(sanitizeString(body.featured_image || body.image) || null);
+  }
+  if (body.published_at !== undefined) {
+    const publishedAt = sanitizeString(body.published_at) || new Date().toISOString();
+    fields.push("published_at = ?");
+    params.push(publishedAt);
+  }
+  if (body.status !== undefined) {
+    fields.push("status = ?");
+    params.push(normalizeBlogStatus(body.status));
+  }
+
+  if (!fields.length) return res.status(400).json({ error: "No changes provided" });
+
+  const now = new Date().toISOString();
+  fields.push("updated_at = ?");
+  params.push(now);
+  params.push(id);
+
+  try {
+    const result = await dbRun(`UPDATE blog_posts SET ${fields.join(", ")} WHERE id = ?`, params);
+    if (!result.changes) return res.status(404).json({ error: "Not found" });
+    const row = await dbGet("SELECT * FROM blog_posts WHERE id = ?", [id]);
+    res.json(buildBlogPostResponse(row));
+  } catch (err) {
+    if (err && err.code === "SQLITE_CONSTRAINT") {
+      return res.status(409).json({ error: "Slug already exists" });
+    }
+    console.error("Failed to update blog post:", err.message);
+    res.status(500).json({ error: "Failed to update blog post" });
+  }
+});
+
+app.delete("/api/admin/blog-posts/:id", adminRequired, async (req, res) => {
+  const id = parseInteger(req.params.id, null);
+  if (!id) return res.status(400).json({ error: "Invalid id" });
+  try {
+    const result = await dbRun("DELETE FROM blog_posts WHERE id = ?", [id]);
+    if (!result.changes) return res.status(404).json({ error: "Not found" });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("Failed to delete blog post:", err.message);
+    res.status(500).json({ error: "Failed to delete blog post" });
+  }
 });
 
 

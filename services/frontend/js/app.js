@@ -36,6 +36,7 @@ let ESEWA_QR_IMAGE = "assets/esewa-qr-placeholder.svg";
 const API_BASE = (localStorage.getItem("SPK_API_BASE") || window.API_BASE || "").trim().replace(/\/$/, "");
   const ILM_STORE_API = "https://store.ilovemithila.com/wp-json/wc/store";
   const ILM_PROXY_BASE = API_BASE ? `${API_BASE}/api/public/ilm` : "";
+const BLOG_POST_LIMIT = 4;
 
 const CATEGORY_ORDER = [
   "freefire",
@@ -330,6 +331,69 @@ async function loadTestimonials(){
   }catch(e){
     // silent
   }
+}
+
+function stripHtml(value) {
+  return String(value || "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function formatBlogDate(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+function blogCardHtml(post) {
+  const snippet = post.summary ? post.summary : stripHtml(post.content).slice(0, 160);
+  const date = post.published_at ? formatBlogDate(post.published_at) : "";
+  const image = post.featured_image ? `<div class="blog-card__media"><img src="${escapeAttr(post.featured_image)}" alt="${escapeHtml(post.title || "")}"></div>` : "";
+  const link = post.slug ? `blog.html?slug=${encodeURIComponent(post.slug)}` : "#";
+  return `
+    <article class="blog-card">
+      ${image}
+      <div class="blog-card__meta">
+        ${date ? `<span>${escapeHtml(date)}</span>` : ""}
+      </div>
+      <h3 class="blog-card__title">${escapeHtml(post.title || "Blog post")}</h3>
+      <p class="blog-card__summary">${escapeHtml(snippet || "Read the latest insights from SoftUpakaran.")}</p>
+      <div class="blog-card__actions">
+        <a class="btn secondary" href="${escapeAttr(link)}" target="_blank" rel="noreferrer">${t("blogReadMore", "Read more")}</a>
+      </div>
+    </article>
+  `;
+}
+
+async function loadBlogPosts() {
+  try {
+    const res = await fetch(`${API_BASE}/api/public/blog-posts?limit=${BLOG_POST_LIMIT}`, { cache: "no-cache" });
+    if (!res.ok) throw new Error("Failed to load blog posts");
+    const rows = await res.json();
+    return Array.isArray(rows) ? rows : [];
+  } catch (error) {
+    console.warn("Failed to load blog posts:", error);
+    return [];
+  }
+}
+
+function renderBlogPosts(posts) {
+  const host = document.querySelector("[data-blog-feed]");
+  if (!host) return;
+  if (!posts.length) {
+    host.innerHTML = `
+      <article class="blog-card placeholder">
+        <p>Add a blog post via the admin panel to showcase stories here.</p>
+      </article>
+    `;
+    return;
+  }
+  host.innerHTML = posts.map(blogCardHtml).join("");
+  ensureVisible(host);
+}
+
+async function loadAndRenderBlog() {
+  const posts = await loadBlogPosts();
+  renderBlogPosts(posts);
 }
 
 const STORE_KEY = "softupakaran_cart_v1";
@@ -1187,6 +1251,7 @@ async function init(){
     products = DEFAULT_PRODUCTS.slice();
   }
   await loadTestimonials();
+  await loadAndRenderBlog();
   updateCartCount();
   renderCategories();
   refreshHomeSections();
