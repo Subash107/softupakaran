@@ -1,15 +1,22 @@
 terraform {
   required_providers {
     render = {
-      source  = "render-oss/render"
-      version = ">= 1.8.0"
+      source  = "render/render"
+      version = ">= 1.29.0"
     }
+  }
+  provider_installation {
+    filesystem_mirror {
+      path = "${path.module}/render-provider-mirror/registry.terraform.io"
+    }
+    direct {}
   }
 }
 
 provider "render" {
   alias   = "module"
   api_key = var.render_api_key
+  region  = var.render_region
 }
 
 resource "render_service" "this" {
