@@ -1,3 +1,12 @@
+terraform {
+  required_providers {
+    render = {
+      source  = "render-oss/render"
+      version = ">= 1.8.0"
+    }
+  }
+}
+
 resource "render_service" "this" {
   name         = var.name
   service_type = var.service_type
