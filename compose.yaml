@@ -1,0 +1,10 @@
+services:
+  asap:
+    image: asap
+    build:
+      context: services/backend/node_modules/asap
+      dockerfile: ./Dockerfile
+    environment:
+      NODE_ENV: production
+    ports:
+      - 3031:3031

@@ -1,0 +1,12 @@
+services:
+  asap:
+    image: asap
+    build:
+      context: services/backend/node_modules/asap
+      dockerfile: ./Dockerfile
+    environment:
+      NODE_ENV: development
+    ports:
+      - 3031:3031
+      - 9229:9229
+    command: ["node", "--inspect=0.0.0.0:9229", "./asap.js"]
