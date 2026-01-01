@@ -78,6 +78,7 @@
         <div class="tabs">
           <button class="tab active" data-tab="settings">Settings</button>
           <button class="tab" data-tab="users">Users</button>
+          <button class="tab" data-tab="logins">Logins</button>
           <button class="tab" data-tab="feedback">Feedback</button>
           <button class="tab" data-tab="categories">Categories</button>
           <button class="tab" data-tab="products">Products</button>
@@ -208,6 +209,37 @@
             </div>
             <div id="createUserMsg" class="msg"></div>
           </div>
+        </div>
+
+        <div class="pane" id="pane-logins">
+          <div class="pane-head">
+            <div style="display:flex; align-items:flex-end; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+              <div>
+                <h3>Admin Logins</h3>
+                <p class="muted">Track when and where admin sign-ins happen.</p>
+              </div>
+              <div class="actions" style="padding:0;">
+                <button id="btnLoginsRefresh" class="btn">Refresh</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="tablewrap">
+            <table class="table" id="loginsTable">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Admin</th>
+                  <th>IP</th>
+                  <th>Country</th>
+                  <th>User Agent</th>
+                  <th>Logged at</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div id="loginsMsg" class="msg"></div>
         </div>
 
         <div class="pane" id="pane-feedback">

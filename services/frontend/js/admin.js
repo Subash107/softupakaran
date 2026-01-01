@@ -147,11 +147,17 @@
             <button class="btn sm danger" data-user-del="${escapeAttr(u.id)}" data-user-del-name="${escapeAttr(u.name || u.email || u.id)}">Delete</button>
           </td>
         `;
-        tbody.appendChild(tr);
+      tbody.appendChild(tr);
       });
       setMsg($("usersMsg"), rows.length ? "" : "No users found.");
     } catch (e) {
       setMsg($("usersMsg"), String(e.message || e), "error");
+    }
+
+    try {
+      await refreshLoginHistory();
+    } catch (err) {
+      setMsg($("loginsMsg"), String(err.message || err), "error");
     }
 
     // Feedback (moderation)
@@ -177,6 +183,44 @@
 
     // Admin 2FA status
     try { await loadTotpStatus(); } catch (_) { /* ignore */ }
+  }
+
+  async function refreshLoginHistory({ limit = 50 } = {}) {
+    const msg = $("loginsMsg");
+    setMsg(msg, "");
+    const table = $("loginsTable");
+    if (!table) return;
+    try {
+      const qs = new URLSearchParams({ limit: String(limit) });
+      const res = await api("/api/admin/logins?" + qs.toString());
+      if (!res.ok) throw new Error("Login history fetch failed: " + res.status);
+      const rows = await res.json();
+      const tbody = table.querySelector("tbody");
+      if (!tbody) return;
+      tbody.innerHTML = "";
+      if (!Array.isArray(rows) || !rows.length) {
+        setMsg(msg, "No login events recorded yet.");
+        return;
+      }
+      rows.forEach((row) => {
+        const countryLabel = row.country_code
+          ? `${row.country_code}${row.country_name ? " (" + row.country_name + ")" : ""}`
+          : "";
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${escapeHtml(row.id ?? "")}</td>
+          <td>${escapeHtml(row.email || row.name || "")}</td>
+          <td>${escapeHtml(row.ip || "")}</td>
+          <td>${escapeHtml(countryLabel)}</td>
+          <td style="max-width:320px; word-break:break-word;">${escapeHtml(row.user_agent || "")}</td>
+          <td>${formatDate(row.created_at)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    } catch (err) {
+      setMsg(msg, String(err.message || err), "error");
+      throw err;
+    }
   }
 
   async function login() {
@@ -1405,6 +1449,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     
 $("btnUsersExport")?.addEventListener("click", exportUsersCsv);
 $("btnFbExport")?.addEventListener("click", exportFeedbackCsv);
+$("btnLoginsRefresh")?.addEventListener("click", () => refreshLoginHistory());
 
 // auto-show if token exists
     if (getToken()) {
