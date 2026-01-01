@@ -23,6 +23,20 @@ function initDb() {
         name TEXT NOT NULL,
         tag TEXT,
         icon TEXT
+    )
+  `);
+
+    // Admin login audit trail
+    db.run(`
+      CREATE TABLE IF NOT EXISTS admin_login_events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        ip TEXT,
+        country_code TEXT,
+        country_name TEXT,
+        user_agent TEXT,
+        created_at TEXT DEFAULT (datetime('now')),
+        FOREIGN KEY (user_id) REFERENCES users(id)
       )
     `);
 

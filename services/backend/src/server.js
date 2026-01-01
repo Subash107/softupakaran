@@ -26,6 +26,19 @@ const BACKUP_HISTORY_LIMIT = 40;
 const BACKUP_RECORDS_FILE = path.join(repoRoot, "infrastructure", "backups", "backup-records.json");
 const BACKUP_SCRIPT_PATH = path.join(repoRoot, "infrastructure", "scripts", "backup-db.js");
 
+const COUNTRY_HEADER_CANDIDATES = [
+  "cf-ipcountry",
+  "x-country-code",
+  "x-appengine-country",
+  "x-forwarded-country",
+  "x-geolocation-country",
+  "x-country",
+];
+const REGION_DISPLAY_NAMES =
+  typeof Intl !== "undefined" && typeof Intl.DisplayNames === "function"
+    ? new Intl.DisplayNames(["en"], { type: "region" })
+    : null;
+
 
 // Ensure correct protocol/host when behind a proxy (Render, etc.)
 app.set("trust proxy", 1);
@@ -111,6 +124,44 @@ function logTrace(req, message, meta = {}) {
   console.log(`[${new Date().toISOString()}][${req.requestId}] ${message}`, meta);
 }
 
+function normalizeCountryCode(value) {
+  if (!value) return "";
+  const trimmed = String(value || "").trim();
+  if (!trimmed) return "";
+  const code = trimmed.replace(/[^A-Za-z]/g, "").slice(0, 2).toUpperCase();
+  return /^[A-Z]{2}$/.test(code) ? code : "";
+}
+
+function formatCountryName(code) {
+  if (!code) return "";
+  if (!REGION_DISPLAY_NAMES) return code;
+  try {
+    return REGION_DISPLAY_NAMES.of(code) || code;
+  } catch (_) {
+    return code;
+  }
+}
+
+function deriveLocationFromRequest(req) {
+  const headerIp = String(req.headers["x-forwarded-for"] || req.headers["x-real-ip"] || "").split(",")[0];
+  const socketIp = req.socket?.remoteAddress || "";
+  const ip = String(headerIp || req.ip || socketIp || "").trim() || "unknown";
+  let countryCode = "";
+  for (const header of COUNTRY_HEADER_CANDIDATES) {
+    if (req.headers[header]) {
+      countryCode = normalizeCountryCode(req.headers[header]);
+      if (countryCode) break;
+    }
+  }
+  const userAgent = String(req.headers["user-agent"] || "").slice(0, 512);
+  return {
+    ip,
+    country_code: countryCode,
+    country_name: countryCode ? formatCountryName(countryCode) : "",
+    user_agent: userAgent,
+  };
+}
+
 async function readBackupRecords() {
   try {
     const json = await fsPromises.readFile(BACKUP_RECORDS_FILE, "utf-8");
@@ -193,6 +244,25 @@ function dbRun(sql, params = []) {
       resolve({ lastID: this.lastID, changes: this.changes });
     });
   });
+}
+
+async function recordAdminLoginEvent(req, userId) {
+  if (!userId) return;
+  const location = deriveLocationFromRequest(req);
+  try {
+    await dbRun(
+      "INSERT INTO admin_login_events (user_id, ip, country_code, country_name, user_agent) VALUES (?, ?, ?, ?, ?)",
+      [
+        userId,
+        location.ip || null,
+        location.country_code || null,
+        location.country_name || null,
+        location.user_agent || null,
+      ]
+    );
+  } catch (err) {
+    console.error("Failed to record admin login:", err.message);
+  }
 }
 
 async function getSetting(key) {
@@ -464,8 +534,10 @@ app.post("/api/auth/login", async (req, res) => {
           window: 1,
         });
         if (!valid) return res.status(401).json({ error: "Invalid 2FA code" });
+        await recordAdminLoginEvent(req, user.id);
         return res.json({ token: signToken({ ...user, totp: true }), totp_enabled: true });
       }
+      await recordAdminLoginEvent(req, user.id);
       return res.json({
         token: signToken({ ...user, totp: false }),
         totp_enabled: false,
@@ -768,6 +840,36 @@ app.get("/api/admin/users", adminRequired, async (_req, res) => {
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: "Failed to load users" });
+  }
+});
+
+app.get("/api/admin/logins", adminRequired, async (req, res) => {
+  try {
+    const limit = Math.min(Math.max(parseInt(req.query.limit || "50", 10) || 50, 1), 200);
+    const rows = await dbAll(
+      `SELECT l.*, u.email, u.name
+       FROM admin_login_events l
+       LEFT JOIN users u ON u.id = l.user_id
+       ORDER BY l.created_at DESC
+       LIMIT ?`,
+      [limit]
+    );
+    res.json(
+      rows.map((row) => ({
+        id: row.id,
+        user_id: row.user_id,
+        email: row.email,
+        name: row.name,
+        ip: row.ip,
+        country_code: row.country_code,
+        country_name: row.country_name,
+        user_agent: row.user_agent,
+        created_at: row.created_at,
+      }))
+    );
+  } catch (err) {
+    console.error("Failed to load admin login history:", err.message);
+    res.status(500).json({ error: "Failed to load login history" });
   }
 });
 
