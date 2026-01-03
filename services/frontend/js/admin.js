@@ -203,9 +203,9 @@
         return;
       }
       rows.forEach((row) => {
-        const countryLabel = row.country_code
-          ? `${row.country_code}${row.country_name ? " (" + row.country_name + ")" : ""}`
-          : "";
+      const flag = countryFlag(row.country_code);
+      const countryName = row.country_name || row.country_code || "";
+      const countryLabel = countryName ? `${flag ? flag + " " : ""}${countryName}`.trim() : flag;
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>${escapeHtml(row.id ?? "")}</td>
@@ -556,11 +556,20 @@ async function exportFeedbackCsv(){
   }
 }
 
-function formatDate(v) {
+  function formatDate(v) {
     if (!v) return "";
     const d = new Date(v);
     if (String(d) === "Invalid Date") return String(v);
     return d.toLocaleString();
+  }
+
+  function countryFlag(code) {
+    if (!code) return "";
+    const upper = String(code).toUpperCase();
+    return [...upper]
+      .filter((c) => /[A-Z]/.test(c))
+      .map((char) => String.fromCodePoint(0x1f1e6 + char.charCodeAt(0) - 65))
+      .join("");
   }
 
   async function safeText(res) {
