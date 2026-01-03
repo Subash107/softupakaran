@@ -1213,6 +1213,69 @@ body.home .heroDots{
 .admin-page .hero p{margin:6px 0 0;}
 
 .card{background: var(--card); border: 1px solid rgba(255,255,255,.08); border-radius: 18px; padding: 16px; box-shadow: 0 10px 30px rgba(0,0,0,.35);}
+.popular-card{
+  border-radius: 26px;
+  padding: 0;
+  overflow: hidden;
+  background: var(--bg);
+  border: 1px solid rgba(255,255,255,0.15);
+  box-shadow:
+    0 0 4px rgba(255,255,255,0.08),
+    0 10px 35px rgba(0,0,0,0.45);
+}
+.popular-card .pad{ padding: 0; }
+.popular-card__media{
+  position: relative;
+  min-height: 220px;
+  overflow: hidden;
+}
+.popular-card__media .thumb{
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.popular-card__media img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transform: scale(1);
+  transition: transform .4s ease;
+  filter: saturate(1.1) contrast(1.1);
+}
+.popular-card__media:hover img{
+  transform: scale(1.06);
+}
+.popular-card__glow{
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(253,224,71,0.45), transparent 50%),
+    radial-gradient(circle at 80% 0%, rgba(14,165,233,0.35), transparent 45%),
+    linear-gradient(180deg, rgba(0,0,0,0.15), rgba(0,0,0,0.4));
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+.popular-card__badge{
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.35);
+  background: rgba(18, 24, 43, 0.85);
+  font-size: 11px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.75);
+}
+.popular-card__body{
+  padding: 16px 18px 20px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0));
+}
 .card.inner{padding: 14px; border-radius: 16px;}
 .card h2,.card h3{margin:0 0 8px;}
 .muted{color: var(--muted);}

@@ -95,7 +95,72 @@ const DEFAULT_CATEGORIES = [
   { id:"web-development", name:"Web Development", tag:"Custom website builds", icon:"WEB" }
 ];
 
-const DEFAULT_PRODUCTS = [];
+const DEFAULT_PRODUCTS = [
+  {
+    id: "popular-freefire-530",
+    name: "Free Fire 530 Diamonds",
+    category: "freefire",
+    price: 999,
+    img: "https://images.unsplash.com/photo-1475721027785-f74eccf877e2?auto=format&fit=crop&w=900&q=80",
+    note: "Direct UID top-up · Instant delivery"
+  },
+  {
+    id: "popular-gaming-mouse",
+    name: "Gaming Mouse RGB (Budget)",
+    category: "gears",
+    price: 1499,
+    img: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=900&q=80",
+    note: "2-year warranty · DPI 6400"
+  },
+  {
+    id: "popular-google-play-10",
+    name: "Google Play Gift Card $10",
+    category: "gift",
+    price: 1550,
+    img: "https://images.unsplash.com/photo-1484704849700-f032a568e944?auto=format&fit=crop&w=900&q=80",
+    note: "US region · Digital PIN"
+  },
+  {
+    id: "popular-netflix-premium",
+    name: "Netflix Premium (1 Month)",
+    category: "netflix",
+    price: 1299,
+    img: "https://store.ilovemithila.com/wp-content/uploads/2025/12/netflix-in-nepal.jpg",
+    note: "Shared profile · 4K"
+  },
+  {
+    id: "popular-pubg-uc",
+    name: "PUBG UC 600 (Global)",
+    category: "pubg",
+    price: 1300,
+    img: "https://images.unsplash.com/photo-1480796927426-f609979314bd?auto=format&fit=crop&w=900&q=80",
+    note: "UID top-up · 5-10 min"
+  },
+  {
+    id: "popular-spotify-3m",
+    name: "Spotify Premium (3 Months)",
+    category: "spotify",
+    price: 1199,
+    img: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=900&q=80",
+    note: "Activation within 1 hour"
+  },
+  {
+    id: "popular-steam-20",
+    name: "Steam Wallet Code $20",
+    category: "gift",
+    price: 3100,
+    img: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&w=900&q=80",
+    note: "Global/US · Instant code"
+  },
+  {
+    id: "popular-tiktok-coins",
+    name: "TikTok Coins 350",
+    category: "social",
+    price: 650,
+    img: "https://images.unsplash.com/photo-1513258496099-48168024aec0?auto=format&fit=crop&w=900&q=80",
+    note: "Nepal payment · Quick delivery"
+  }
+];
 
 const SAMPLE_SUBSCRIPTIONS = [
   { id: "sample-netflix", name: "Netflix Premium (1 Month)", category: "netflix", price: 1299, img: "https://store.ilovemithila.com/wp-content/uploads/2025/12/netflix-in-nepal.jpg", note: "Shared profile - 4K" },
@@ -490,11 +555,15 @@ function renderCategories(){
 
 function productCard(p){
   return `
-  <div class="card">
-    <a href="product.html?id=${encodeURIComponent(p.id)}" class="thumb">
-      ${lazyImage(p.img, p.name)}
-    </a>
-    <div class="pad">
+  <div class="card popular-card">
+    <div class="popular-card__media">
+      <a href="product.html?id=${encodeURIComponent(p.id)}" class="thumb" aria-label="${p.name}">
+        ${lazyImage(p.img, p.name, "popular-card__image")}
+      </a>
+      <div class="popular-card__glow"></div>
+      <span class="popular-card__badge">Popular product</span>
+    </div>
+    <div class="popular-card__body">
       <p class="cardTitle">${p.name}</p>
       <p class="cardMeta">${localeNote(p)}</p>
       <div class="price">
@@ -570,10 +639,16 @@ function refreshHomeSections(){
   renderProductPage();
 }
 
+function getPopularCatalog(){
+  const seen = new Set(DEFAULT_PRODUCTS.map(p => p.id));
+  const extras = products.filter((p) => !seen.has(p.id));
+  return [...DEFAULT_PRODUCTS, ...extras];
+}
+
 function renderPopular(){
   const root = document.querySelector("[data-popular]");
   if(!root) return;
-  const items = products.slice(0, 8);
+  const items = getPopularCatalog().slice(0, 8);
   root.innerHTML = items.map(productCard).join("");
   wireAddButtons(root);
   ensureVisible(root);
