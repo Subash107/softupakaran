@@ -212,6 +212,7 @@
           <td>${escapeHtml(row.email || row.name || "")}</td>
           <td>${escapeHtml(row.ip || "")}</td>
           <td>${escapeHtml(countryLabel)}</td>
+          <td>${escapeHtml(row.location || "")}</td>
           <td style="max-width:320px; word-break:break-word;">${escapeHtml(row.user_agent || "")}</td>
           <td>${formatDate(row.created_at)}</td>
         `;

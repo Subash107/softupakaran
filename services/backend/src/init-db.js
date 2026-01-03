@@ -81,6 +81,7 @@ function initDb() {
     ensureColumn("products", "tier", "TEXT");
     ensureColumn("products", "availability", "TEXT");
     ensureColumn("products", "note_ne", "TEXT");
+    ensureColumn("admin_login_events", "location", "TEXT");
 
     // Users & admin
     db.run(`

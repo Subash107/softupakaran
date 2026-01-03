@@ -11,6 +11,7 @@ const speakeasy = require("speakeasy");
 const qrcode = require("qrcode");
 const { google } = require("googleapis");
 const { spawn } = require("child_process");
+const geoip = require("geoip-lite");
 
 const db = require("./db");
 const initDb = require("./init-db");
@@ -154,10 +155,22 @@ function deriveLocationFromRequest(req) {
     }
   }
   const userAgent = String(req.headers["user-agent"] || "").slice(0, 512);
+  const normalizedIp = ip.replace(/^::ffff:/i, "").trim();
+  const geo = normalizedIp && normalizedIp !== "unknown" ? geoip.lookup(normalizedIp) : null;
+  const geoCountry = geo?.country || "";
+  const finalCountryCode = countryCode || geoCountry;
+  const countryName = finalCountryCode ? formatCountryName(finalCountryCode) : "";
+  const regionName = geo?.region || "";
+  const cityName = geo?.city || "";
+  const locationParts = [cityName, regionName].filter(Boolean);
+  const locationLabel = locationParts.length ? locationParts.join(", ") : countryName;
   return {
     ip,
-    country_code: countryCode,
-    country_name: countryCode ? formatCountryName(countryCode) : "",
+    country_code: finalCountryCode,
+    country_name: countryName,
+    city: cityName,
+    region: regionName,
+    location: locationLabel,
     user_agent: userAgent,
   };
 }
@@ -251,12 +264,13 @@ async function recordAdminLoginEvent(req, userId) {
   const location = deriveLocationFromRequest(req);
   try {
     await dbRun(
-      "INSERT INTO admin_login_events (user_id, ip, country_code, country_name, user_agent) VALUES (?, ?, ?, ?, ?)",
+      "INSERT INTO admin_login_events (user_id, ip, country_code, country_name, location, user_agent) VALUES (?, ?, ?, ?, ?, ?)",
       [
         userId,
         location.ip || null,
         location.country_code || null,
         location.country_name || null,
+        location.location || null,
         location.user_agent || null,
       ]
     );
@@ -863,6 +877,7 @@ app.get("/api/admin/logins", adminRequired, async (req, res) => {
         ip: row.ip,
         country_code: row.country_code,
         country_name: row.country_name,
+        location: row.location,
         user_agent: row.user_agent,
         created_at: row.created_at,
       }))
