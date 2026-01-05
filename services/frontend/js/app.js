@@ -34,6 +34,7 @@ let WHATSAPP_NUMBER = "9779800000000";
 let ESEWA_QR_IMAGE = "assets/esewa-qr-placeholder.svg";
 
 const API_BASE = (localStorage.getItem("SPK_API_BASE") || window.API_BASE || "").trim().replace(/\/$/, "");
+const API_BASE_HOST = API_BASE ? API_BASE.replace(/\/$/, "") : "";
   const ILM_STORE_API = "https://store.ilovemithila.com/wp-json/wc/store";
   const ILM_PROXY_BASE = API_BASE ? `${API_BASE}/api/public/ilm` : "";
 const BLOG_POST_LIMIT = 4;
@@ -379,6 +380,19 @@ function escapeAttr(value){
     .replace(/>/g, "&gt;");
 }
 
+function resolveBlogImageUrl(value) {
+  // Ensure uploads stored on the API host still resolve when the frontend runs elsewhere.
+  const src = String(value ?? "").trim();
+  if (!src) return "";
+  if (/^(https?:)?\/\//i.test(src)) return src;
+  if (src.startsWith("/uploads/")) return API_BASE_HOST ? `${API_BASE_HOST}${src}` : src;
+  if (/^uploads\//i.test(src)) {
+    const trimmed = src.replace(/^\/+/,"");
+    return API_BASE_HOST ? `${API_BASE_HOST}/${trimmed}` : `/${trimmed}`;
+  }
+  return src;
+}
+
 async function loadTestimonials(){
   const host = document.getElementById("testimonialsList");
   if(!host) return;
@@ -420,7 +434,8 @@ function formatBlogDate(value) {
 function blogCardHtml(post) {
   const snippet = post.summary ? post.summary : stripHtml(post.content).slice(0, 160);
   const date = post.published_at ? formatBlogDate(post.published_at) : "";
-  const image = post.featured_image ? `<div class="blog-card__media"><img src="${escapeAttr(post.featured_image)}" alt="${escapeHtml(post.title || "")}"></div>` : "";
+  const imageUrl = resolveBlogImageUrl(post.featured_image);
+  const image = imageUrl ? `<div class="blog-card__media"><img src="${escapeAttr(imageUrl)}" alt="${escapeHtml(post.title || "")}"></div>` : "";
   const link = post.slug ? `blog.html?slug=${encodeURIComponent(post.slug)}` : "#";
   return `
     <article class="blog-card">

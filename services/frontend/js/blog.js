@@ -7,6 +7,7 @@
     .toString()
     .trim()
     .replace(/\/+$/, "");
+  const BLOG_IMAGE_BASE = API_ROOT ? API_ROOT.replace(/\/$/, "") : "";
 
   function escapeHtml(text) {
     return String(text || "").replace(/[&<>"']/g, (char) =>
@@ -20,6 +21,19 @@
       .replace(/"/g, "&quot;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;");
+  }
+
+  function resolveBlogImageUrl(value) {
+    // Ensure uploads stored on the API host resolve correctly for the article view.
+    const src = String(value || "").trim();
+    if (!src) return "";
+    if (/^(https?:)?\/\//i.test(src)) return src;
+    if (src.startsWith("/uploads/")) return BLOG_IMAGE_BASE ? `${BLOG_IMAGE_BASE}${src}` : src;
+    if (/^uploads\//i.test(src)) {
+      const trimmed = src.replace(/^\/+/, "");
+      return BLOG_IMAGE_BASE ? `${BLOG_IMAGE_BASE}/${trimmed}` : `/${trimmed}`;
+    }
+    return src;
   }
 
   function formatBlogDate(value) {
@@ -45,8 +59,9 @@
     const title = escapeHtml(post.title || "Blog post");
     const date = formatBlogDate(post.published_at);
     const summary = post.summary ? `<p class="muted">${escapeHtml(post.summary)}</p>` : "";
-    const image = post.featured_image
-      ? `<figure class="blog-article__media"><img src="${escapeAttr(post.featured_image)}" alt="${escapeHtml(
+    const imageUrl = resolveBlogImageUrl(post.featured_image);
+    const image = imageUrl
+      ? `<figure class="blog-article__media"><img src="${escapeAttr(imageUrl)}" alt="${escapeHtml(
           post.title || ""
         )}"></figure>`
       : "";
