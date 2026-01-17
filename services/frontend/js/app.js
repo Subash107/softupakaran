@@ -604,6 +604,15 @@ function wireAddButtons(root=document){
   });
 }
 
+function registerSampleProducts(items = []){
+  if(!items.length) return;
+  items.forEach((item) => {
+    if(!products.find((p) => p.id === item.id)){
+      products.push({ ...item });
+    }
+  });
+}
+
 const CURATED_CONFIG = [
   {
     attr: "subscriptions",
@@ -638,6 +647,7 @@ function renderCuratedSections(){
         </div>
       `;
       if(cfg.sample){
+        registerSampleProducts(cfg.sample);
         const sampleGrid = cfg.sample.map(productCard).join("");
         root.innerHTML = `<div class="curatedFallback">${sampleGrid}</div>`;
         wireAddButtons(root);
